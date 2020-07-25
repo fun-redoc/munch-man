@@ -4,13 +4,13 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 69ab4c1de6699a7224c6e7def8b573f20b32f814be2b21960a5808200efc90bf
+-- hash: b4db03ebe2f7e014ed9a0b21e769524847ba68911852cfc5c57b928ca82358ef
 
-name:           sokoban-gloss
+name:           munchman-gloss
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/sokoban-gloss#readme>
-homepage:       https://github.com/githubuser/sokoban-gloss#readme
-bug-reports:    https://github.com/githubuser/sokoban-gloss/issues
+description:    Please see the README on GitHub at <https://github.com/githubuser/munchman-gloss#readme>
+homepage:       https://github.com/githubuser/munchman-gloss#readme
+bug-reports:    https://github.com/githubuser/munchman-gloss/issues
 author:         Roland Stellmach
 maintainer:     fun.redoc@gmail.com
 copyright:      2020 Roland
@@ -22,100 +22,89 @@ extra-source-files:
     ChangeLog.md
 data-files:
     level.txt
-    wall_50x50.bmp
-    crate1_diffuse_50x50.bmp
-    crate2_diffuse_50x50.bmp
-    alien.bmp
     BluesLoops_11_StayOnBeat.com.wav
-    thump.wav
-    twang.wav
+    PacManR1s.png
+    PacManR2s.png
+    PacManL1s.png
+    PacManL2s.png
+    PacManU1s.png
+    PacManU2s.png
+    PacManD1s.png
+    PacManD2s.png
 data-dir:       data
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/sokoban-gloss
+  location: https://github.com/githubuser/munchman-gloss
 
 library
   exposed-modules:
       Lib
   other-modules:
-      Paths_sokoban_gloss
+      Paths_munchman_gloss
   autogen-modules:
-      Paths_sokoban_gloss
+      Paths_munchman_gloss
   hs-source-dirs:
       src
   build-depends:
       ALUT
+    , JuicyPixels
     , base >=4.7 && <5
     , bmp
     , directory
     , gloss
+    , gloss-juicy
     , lens
+    , random
     , strict
     , transformers
     , vector
   default-language: Haskell2010
 
-executable sokoban-ascii-exe
+executable munchman-gloss-exe
   main-is: Main.hs
   other-modules:
-      Paths_sokoban_gloss
+      Paths_munchman_gloss
   autogen-modules:
-      Paths_sokoban_gloss
-  hs-source-dirs:
-      ascii
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      ALUT
-    , base >=4.7 && <5
-    , bmp
-    , directory
-    , gloss
-    , lens
-    , sokoban-gloss
-    , strict
-    , transformers
-    , vector
-  default-language: Haskell2010
-
-executable sokoban-gloss-exe
-  main-is: Main.hs
-  other-modules:
-      Paths_sokoban_gloss
-  autogen-modules:
-      Paths_sokoban_gloss
+      Paths_munchman_gloss
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ALUT
+    , JuicyPixels
     , base >=4.7 && <5
     , bmp
     , directory
     , gloss
+    , gloss-juicy
     , lens
-    , sokoban-gloss
+    , munchman-gloss
+    , random
     , strict
     , transformers
     , vector
   default-language: Haskell2010
 
-test-suite sokoban-gloss-test
+test-suite munchman-gloss-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_sokoban_gloss
+      Paths_munchman_gloss
   hs-source-dirs:
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ALUT
+    , JuicyPixels
     , base >=4.7 && <5
     , bmp
     , directory
     , gloss
+    , gloss-juicy
     , lens
-    , sokoban-gloss
+    , munchman-gloss
+    , random
     , strict
     , transformers
     , vector
