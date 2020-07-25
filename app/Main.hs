@@ -11,6 +11,7 @@ import Data.Maybe (fromMaybe, fromJust, isNothing)
 import Data.List ( intercalate )
 import Control.Monad
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Trans.State.Strict
 import Codec.BMP
 import Codec.Picture
 import Graphics.Gloss.Interface.IO.Game
@@ -32,9 +33,10 @@ backgroundColor = makeColor 0 0 0 255
 screenWidth  = 640::Float
 screenHeight = 400::Float
 
+
 data World = World { _time::Float
                    , _spriteIdx::Int
-                   , _state::GameState
+                   , _gameState::GameState
                    }
 makeLenses ''World
 
@@ -51,9 +53,11 @@ data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          }
 makeLenses ''GameConfiguraton
 
+-- | file path to store last played level number
 levelPath::String
 levelPath = "/.munchmanLastLevel.txt"
 
+-- | load sound data
 loadSound path = do
       -- Create an AL buffer from the given sound file.
       buf <- AL.createBuffer  (AL.File path)
@@ -61,6 +65,7 @@ loadSound path = do
       AL.buffer source AL.$= Just buf
       return source
 
+-- | play a single sound 
 playSound :: AL.Source -> IO ()
 playSound source = do
     AL.play [source]
@@ -70,17 +75,22 @@ playSound source = do
         hPutStrLn stderr (intercalate "," [ d | AL.ALError _ d <- errs ])
     return ()
 
+-- | play music loop
 playLoop :: AL.Source -> IO ()
 playLoop source = do
     AL.loopingMode source AL.$= AL.Looping
     playSound source
 
+-- | monadic lifting with 1 parameter
 liftM'::Monad m=>(a->b)->(a->m b)
 liftM' f x = return $ f x
+
+-- | monadic lifting with 2 parameters
 liftM''::Monad m=>(a->b->c)->(a->b->m c)
 liftM'' f x y = return $ f x y
 
 
+-- | retrieves the last played game level
 getLastLevel::IO Int
 getLastLevel = do
     res <- tryIOError $ do
@@ -91,6 +101,7 @@ getLastLevel = do
                           return (read contents::Int)
     return $ fromRight 0 res
 
+-- | saves the current level reached in the game
 -- TODO should not be used in mai thread
 putLevel::Int->IO ()
 putLevel n = do
@@ -101,14 +112,52 @@ putLevel n = do
                           hClose handle
     return ()
 
--- TODO should not be used in mai thread
-loadLevel::Int->IO GameState
+-- | load a specific level number, level numbers begin with 0
+-- TODO should not be used in main thread
+loadLevel::Int           -- ^ level number 0.. must correxpond to the level file contents
+         ->IO GameState  -- ^ new GameState, if no appropriate level data found, returns ErrorState
 loadLevel n = do level' <- fileLevelReader n
                  return $ case level' of
                             Nothing -> ErrorState "Failed to load Level."
                             Just level -> Playing $ Game n level
 
+-- | loads the inital level, all movements will be discarded
+restartLevel::Game->IO GameState
 restartLevel game = loadLevel (game^.level)
+
+-- | input handler wrapper allowing state and IO
+handleInputIOState::Event                    -- ^ event to handle
+                  ->StateT World IO ()    -- ^ current state of the game world
+handleInputIOState evt = do world <- get
+                            world' <- liftIO $ handleInputIO evt world
+                            put world'
+                            return ()
+
+-- | input handler for the different states of the game
+handleInputIO::Event     -- ^ event to handle
+             ->World     -- ^ 'old' world state
+             ->IO World  -- ^ 'new' wolrd state after handling event
+handleInputIO (EventKey (Char 'q') Down _ _)
+              world@(World _ _ (Playing game))   = do putLevel (game^.level)
+                                                      exitSuccess
+handleInputIO (EventKey (Char 'r') Down _ _)
+              world@(World _ _ (Playing game))   = do freshState <- restartLevel game
+                                                      return $ world&gameState.~freshState
+handleInputIO (EventKey (Char 'q') Down _ _) _   = exitSuccess
+handleInputIO (EventKey _          Up   _ _)
+              world@(World _ _ StartGame)        = do savedLevel <- getLastLevel
+                                                      freshState <- loadLevel savedLevel
+                                                      return $ world&gameState.~freshState
+handleInputIO (EventKey (SpecialKey KeyEnter) Up _ _)
+              world@(World _ _ (WonGame   game)) = do putLevel (game^.level)
+                                                      freshStateNextLevel <- loadLevel (game^.level + 1)
+                                                      return $ world&gameState.~freshStateNextLevel
+
+
+handleInputIO (EventKey _          Up   _ _)
+              world@(World _ _ (LostGame  game))  = undefined
+handleInputIO evt
+              world@(World _ _ wholeGameState)         = return $ world&gameState.~ handleInput evt wholeGameState
 
 handleInput::Event->GameState->GameState
 handleInput (EventKey (Char c) Up   _ _) (Playing game) = Playing $ game & field . man . dir .~  (Stop (game^.field.man.dir))
@@ -124,29 +173,6 @@ handleInput (EventKey (Char c) Down _ _) (Playing game) = if isWon $ newGame^.fi
                    _   -> game
 handleInput _                              gameState      = gameState
 
-handleInputIO::Event->World->IO World
-handleInputIO (EventKey (Char 'q') Down _ _)
-              world@(World _ _ (Playing game))   = do putLevel (game^.level)
-                                                      exitSuccess
-handleInputIO (EventKey (Char 'r') Down _ _)
-              world@(World _ _ (Playing game))   = do freshState <- restartLevel game
-                                                      return $ world&state.~freshState
-handleInputIO (EventKey (Char 'q') Down _ _) _   = exitSuccess
-handleInputIO (EventKey _          Up   _ _)
-              world@(World _ _ StartGame)        = do savedLevel <- getLastLevel
-                                                      freshState <- loadLevel savedLevel
-                                                      return $ world&state.~freshState
-handleInputIO (EventKey (SpecialKey KeyEnter) Up _ _)
-              world@(World _ _ (WonGame   game)) = do putLevel (game^.level)
-                                                      freshStateNextLevel <- loadLevel (game^.level + 1)
-                                                      return $ world&state.~freshStateNextLevel
-
-
-handleInputIO (EventKey _          Up   _ _)
-              world@(World _ _ (LostGame  game))  = undefined
-handleInputIO evt
-              world@(World _ _ gameState)         = return $ world&state.~ handleInput evt gameState
-
 toPoint::Pos -> Point
 toPoint = over both fromIntegral
 
@@ -155,7 +181,9 @@ mul (x,y) (x',y') = (x*x',y*y')
 div::Point->Point->Point
 div (x,y) (x',y') = (x/x', y/y')
 
-
+gameAsPictureState::GameConfiguraton->StateT World IO Picture
+gameAsPictureState gameConf = do world <- get
+                                 return $ gameAsPicture gameConf world
 
 gameAsPicture::GameConfiguraton->World->Picture
 gameAsPicture gameConf
@@ -233,18 +261,31 @@ loadPng fileName = do
                           Right (ImageRGBA8 im)  -> Right (imageWidth im, imageHeight im)
                           otherwiae -> Left "unknow format"
 
+-- | move munch man in the world
+-- TODO check wall collisions
+moveManState::(Monad m)=>Float->StateT World m ()
+moveManState dt = do world <- get
+                     case world of
+                        (World _ i (Playing game)) -> put $ world&gameState.~ Playing (moveManInGame game)
+                        otherwiae -> return ()
 
-
-
-gameLoopIO::Float->World->IO World
-gameLoopIO dt world@(World _ i (Playing game)) =
-  return $ world & state.~ Playing newGame
-                 & time +~ dt
-                 & if i > 30 then spriteIdx .~ 0 else spriteIdx +~ 1
   where
-    dirVec  = toDirVec (game^.field.man.dir) (game^.field.man.speed)
-    newGame = game & field.man.manPos %~ add dirVec
-gameLoopIO _ world  = return world
+    moveManInGame game = game & field.man.manPos %~ add dirVec
+      where dirVec  = toDirVec (game^.field.man.dir) (game^.field.man.speed)
+
+-- | sprite animation counter  (mouth cosed / opened)
+spriteAnimation::(Monad m)=>Float->StateT World m ()
+spriteAnimation dt = do world <- get
+                        let world' = world & time +~ dt
+                                           & if world^.spriteIdx > 30 then spriteIdx .~ 0 else spriteIdx +~ 1
+                        put world'
+
+-- | the game loop with state
+gameLoopIOState::Float                    -- ^ time passed since last loop in sec.
+               -> StateT World IO ()   -- ^ the game state
+gameLoopIOState dt = do moveManState dt
+                        spriteAnimation dt
+
 
 main :: IO ()
 main = AL.withProgNameAndArgs AL.runALUT $ \progName args -> do
@@ -291,26 +332,24 @@ main = AL.withProgNameAndArgs AL.runALUT $ \progName args -> do
 --   let scalePic = min scalex scaley
    let (scalex, scaley) = (1, 1)
    let scalePic = min scalex scaley
+   let gameConf = GameConfiguraton objectSize
+                                   (scalex, scaley)
+                                   packManR1
+                                   packManR2
+                                   packManL1
+                                   packManL2
+                                   packManU1
+                                   packManU2
+                                   packManD1
+                                   packManD2
 
    let window = InWindow ("Sokoban "++show appMode) (round screenWidth, round screenHeight) (100, 100)
    playIO window backgroundColor 30 initialGame
-               (liftM'  (translate (-(screenWidth/2)+(objectSize*scalePic))
-                                   (-(screenHeight/2)+(objectSize*scalePic))
-                                   . scale scalePic scalePic
-                                   . gameAsPicture (GameConfiguraton objectSize
-                                                                     (scalex, scaley)
-                                                                     packManR1
-                                                                     packManR2
-                                                                     packManL1
-                                                                     packManL2
-                                                                     packManU1
-                                                                     packManU2
-                                                                     packManD1
-                                                                     packManD2
-                                                                     )
-                                   ))
-               --(liftM'' handleInput)
-               --(liftM'' (const id))
-               handleInputIO
-               gameLoopIO
+               (\w-> do rawPic <- evalStateT (gameAsPictureState gameConf) w
+                        return $  (translate (-(screenWidth/2)+(objectSize*scalePic))
+                                             (-(screenHeight/2)+(objectSize*scalePic))
+                                             . scale scalePic scalePic) rawPic
+               )
+               (execStateT . handleInputIOState)
+               (execStateT . gameLoopIOState)
    exitSuccess
