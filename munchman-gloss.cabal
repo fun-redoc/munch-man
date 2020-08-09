@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 660791cdfd6027a8be3437af41c660475ff27a8305ccc8e748fd661067bb7383
+-- hash: 2cab7163d3dbc11c1f730d3531c3391fda52727a85701d0bc6462d3908153d5b
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -48,6 +48,7 @@ library
       Pill
       Render
       Step
+      World
   other-modules:
       Paths_munchman_gloss
   autogen-modules:

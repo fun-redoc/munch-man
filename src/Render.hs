@@ -11,6 +11,7 @@ import Event
 import Step
 import Pill
 import Game
+import World
 
 --import qualified Data.Vector as V
 import Data.Either
@@ -36,7 +37,6 @@ import qualified Sound.ALUT as AL hiding (Static)
 import Paths_munchman_gloss
 
 type Size = Float
-data AppMode = Ascii | Gloss deriving (Eq, Show, Read)
 backgroundColor = makeColor 0 0 0 255
 screenWidth  = 800::Float
 screenHeight = 600::Float
@@ -45,12 +45,6 @@ fieldHeight::Float = 31
 factorX::Float = screenWidth/fieldWidth
 factorY::Float = screenHeight/fieldHeight
 
-
-data World  = World { _time::Float
-                    , _event::GameEvent
-                    , _scene::GameScene
-                    }
-makeLenses ''World
 
 data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          , _scaleFactors::Point
@@ -64,6 +58,48 @@ data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          , _manD2::Picture
                                          }
 makeLenses ''GameConfiguraton
+
+mkConfiguration::IO GameConfiguraton
+mkConfiguration = do
+    -- load images
+    (packManR1', packManR1Size) <- loadPng "PacManR1s.png"
+    (packManR2', packManR2Size) <- loadPng "PacManR2s.png"
+    let packManR1 = scale 1 1 packManR1'
+    let packManR2 = scale 1 1 packManR2'
+    (packManL1', packManL1Size) <- loadPng "PacManL1s.png"
+    (packManL2', packManL2Size) <- loadPng "PacManL2s.png"
+    let packManL1 = scale 1 1 packManL1'
+    let packManL2 = scale 1 1 packManL2'
+    (packManU1', packManU1Size) <- loadPng "PacManD1s.png"
+    (packManU2', packManU2Size) <- loadPng "PacManD2s.png"
+    let packManU1 = scale 1 1 packManU1'
+    let packManU2 = scale 1 1 packManU2'
+    (packManD1', packManD1Size) <- loadPng "PacManU1s.png"
+    (packManD2', packManD2Size) <- loadPng "PacManU2s.png"
+    let packManD1 = scale 1 1 packManD1'
+    let packManD2 = scale 1 1 packManD2'
+
+    let objectSize = uncurry max packManR1Size
+
+    let manRadius = objectSize / 2
+    let startPosX = screenWidth / 2
+    let startPosY = screenHeight / 2
+    let speed     = screenWidth / 10 -- 10 seconds to traverse the whole screen
+    let (scalex, scaley) = (1, 1)
+    let scalePic = min scalex scaley
+    -- TODO replace configuration passing by Reader Monad
+    let gameConf = GameConfiguraton objectSize
+                                   (scalex, scaley)
+                                   packManR1
+                                   packManR2
+                                   packManL1
+                                   packManL2
+                                   packManU1
+                                   packManU2
+                                   packManD1
+                                   packManD2
+    return gameConf
+
 
 
 loadPicture::FilePath->IO (Picture, Point)
@@ -94,11 +130,6 @@ loadPng fileName = do
 
 toPoint::Pos -> Point
 toPoint = over both fromIntegral
---
---mul::Point->Point->Point
---mul (x,y) (x',y') = (x*x',y*y')
---div::Point->Point->Point
---div (x,y) (x',y') = (x/x', y/y')
 
 startSceneAsPicture::GameConfiguraton->Picture
 startSceneAsPicture  gameConf = uncurry scale (0.3,0.3)
