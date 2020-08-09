@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b4db03ebe2f7e014ed9a0b21e769524847ba68911852cfc5c57b928ca82358ef
+-- hash: 660791cdfd6027a8be3437af41c660475ff27a8305ccc8e748fd661067bb7383
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -39,7 +39,15 @@ source-repository head
 
 library
   exposed-modules:
+      Board
+      Event
+      Game
+      Ghost
       Lib
+      Man
+      Pill
+      Render
+      Step
   other-modules:
       Paths_munchman_gloss
   autogen-modules:
@@ -52,8 +60,11 @@ library
     , base >=4.7 && <5
     , bmp
     , directory
+    , ghci-dap
     , gloss
     , gloss-juicy
+    , haskell-dap
+    , haskell-debug-adapter
     , lens
     , random
     , strict
@@ -76,8 +87,11 @@ executable munchman-gloss-exe
     , base >=4.7 && <5
     , bmp
     , directory
+    , ghci-dap
     , gloss
     , gloss-juicy
+    , haskell-dap
+    , haskell-debug-adapter
     , lens
     , munchman-gloss
     , random
@@ -100,8 +114,11 @@ test-suite munchman-gloss-test
     , base >=4.7 && <5
     , bmp
     , directory
+    , ghci-dap
     , gloss
     , gloss-juicy
+    , haskell-dap
+    , haskell-debug-adapter
     , lens
     , munchman-gloss
     , random
