@@ -7,7 +7,7 @@
         {
             "type": "ghc",
             "request": "launch",
-            "name": "stack run",
+            "name": "stack debug",
             "internalConsoleOptions": "openOnSessionStart",
             "workspace": "${workspaceFolder}",
             "startup": "${workspaceFolder}/app/Main.hs",
@@ -17,7 +17,7 @@
             "mainArgs": "",
             "ghciPrompt": "H>>= ",
             "ghciInitialPrompt": "λ>",
-            "ghciCmd": "stack ghci --ghci-options -fno-ghci-sandbox --no-load --no-build --main-is TARGET",
+            "ghciCmd": "stack ghci --no-load --no-build --main-is TARGET",
             "ghciEnv": {},
             "logFile": "${workspaceFolder}/.vscode/phoityne.log",
             "logLevel": "WARNING",

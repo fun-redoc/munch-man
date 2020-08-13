@@ -1,7 +1,6 @@
-
 {-# LANGUAGE BlockArguments, TemplateHaskell, BangPatterns, GADTs, ScopedTypeVariables #-}
 
-module Render where
+module Rendering.Configuration where
 
 import Debug.Trace (trace)
 
@@ -38,16 +37,16 @@ import Paths_munchman_gloss
 
 type Size = Float
 backgroundColor = makeColor 0 0 0 255
-screenWidth  = 800::Float
-screenHeight = 600::Float
-fieldWidth::Float = 52
-fieldHeight::Float = 31
-factorX::Float = screenWidth/fieldWidth
-factorY::Float = screenHeight/fieldHeight
 
 
 data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          , _scaleFactors::Point
+                                         , _screenWidth::Float
+                                         , _screenHeight::Float
+                                         , _fieldWidth::Float
+                                         , _fieldHeight::Float
+                                         , _factorX::Float
+                                         , _factorY::Float
                                          , _manR1::Picture
                                          , _manR2::Picture
                                          , _manL1::Picture
@@ -58,6 +57,9 @@ data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          , _manD2::Picture
                                          }
 makeLenses ''GameConfiguraton
+
+toPoint::Pos -> Point
+toPoint = over both fromIntegral
 
 mkConfiguration::IO GameConfiguraton
 mkConfiguration = do
@@ -81,15 +83,28 @@ mkConfiguration = do
 
     let objectSize = uncurry max packManR1Size
 
+    -- TODO replace configuration passing by Reader Monad
+    let screenWidth  = 800::Float
+    let screenHeight = 600::Float
+    let fieldWidth::Float = 35
+    let fieldHeight::Float = 20
+    let factorX::Float = screenWidth/fieldWidth
+    let factorY::Float = screenHeight/fieldHeight
     let manRadius = objectSize / 2
     let startPosX = screenWidth / 2
     let startPosY = screenHeight / 2
     let speed     = screenWidth / 10 -- 10 seconds to traverse the whole screen
-    let (scalex, scaley) = (1, 1)
+    let (scalex, scaley) = (factorX/objectSize, factorY/objectSize)
     let scalePic = min scalex scaley
-    -- TODO replace configuration passing by Reader Monad
     let gameConf = GameConfiguraton objectSize
                                    (scalex, scaley)
+                                   --(scalePic, scalePic)
+                                   screenWidth
+                                   screenHeight
+                                   fieldWidth
+                                   fieldHeight
+                                   factorX
+                                   factorY
                                    packManR1
                                    packManR2
                                    packManL1
@@ -127,51 +142,3 @@ loadPng fileName = do
    pngSize eitherPng = case eitherPng of
                           Right (ImageRGBA8 im)  -> Right (imageWidth im, imageHeight im)
                           otherwiae -> Left "unknow format"
-
-toPoint::Pos -> Point
-toPoint = over both fromIntegral
-
-startSceneAsPicture::GameConfiguraton->Picture
-startSceneAsPicture  gameConf = uncurry scale (0.3,0.3)
-                               $ Color Graphics.Gloss.yellow
-                               $ pictures [translate 0 120 $ Text "press some key"
-                                          ,Text "to start game..."
-                                          ]
-errorSceneAsPicture gameConf errDesc = uncurry scale (0.15,0.15)
-                                       $ Color Graphics.Gloss.red
-                                       $ pictures [ translate 0 240 $ Text errDesc
-                                                  , translate 0 120 $ Text "press some key"
-                                                  , Text "to quit..."
-                                                  ]
-dirToTexture::GameConfiguraton->Dir->(Picture, Picture)
-dirToTexture gameConf dir = case dir of
-                                  DirLeft     -> (gameConf^.manL1,gameConf^.manL2)
-                                  DirRight    -> (gameConf^.manR1,gameConf^.manR2)
-                                  DirUp       -> (gameConf^.manU1,gameConf^.manU2)
-                                  DirDown     -> (gameConf^.manD1,gameConf^.manD2)
-
-manStateAsPicture::GameConfiguraton->ManState->Picture
-manStateAsPicture gameConf manState = manTexture
-  where
-    manTexture = case manState^.action of
-                      (ManActionGo dir)                             -> translate posx posy
-                                                                       $ fst $ dirToTexture gameConf dir
-                      (ManActionStop dir)                           -> translate posx posy
-                                                                       $ fst $ dirToTexture gameConf dir
-                      (ManActionEat  pill dir digestTime)           -> Blank -- TODO
-                      (ManActionGhostCollition ghost dir dyingTime) -> Blank -- TODO
-    (posx, posy) = (\(x,y,r) -> (x*fieldWidth,y*fieldHeight)) (manState^.object)
-
-playingSceneAsPicture::GameConfiguraton->Game->StateT World IO Picture
-playingSceneAsPicture gameConf game = return $
-  pictures [ manStateAsPicture gameConf (game^.manState)
-           ]
-
-gameAsPictureState::GameConfiguraton->StateT World IO Picture
-gameAsPictureState gameConf = do world <- get
-                                 let s = world^.scene
-                                 case s of
-                                  StartGame -> return $ startSceneAsPicture gameConf
-                                  ErrorState desc -> return $ errorSceneAsPicture gameConf desc
-                                  Playing game -> playingSceneAsPicture gameConf game
-                                  _ -> return Blank

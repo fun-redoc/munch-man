@@ -23,8 +23,6 @@ data Game = Game { _level::Int
                  , _manState::ManState
                  }
 makeLenses ''Game
-mkGame::Game
-mkGame = Game 0 mkGameField mkManState
 
 data GameScene = StartGame
                | Playing           Game
@@ -98,6 +96,10 @@ playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ 
 
 playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
 playSceneStartGame dt GameEventStartGame = return $ Playing mkGame
+  where mkGame::Game
+        mkGame    = Game 0 gameField manState
+        gameField = mkGameField 
+        manState  = mkManState (gameField^.man)
 playSceneStartGame _ _  = return $ StartGame
 
 -- | checks if there was a ghost collision
@@ -115,7 +117,7 @@ isWon _ = False
 fileLevelReader ::  Int -> IO (Maybe GameField)
 fileLevelReader n = do
   -- mock empty Field  
-  return $  Just (GameField [] [] [] [] [])
+  return $  Just (GameField [] [] [] [] [] Nothing)
 --  allLevels <- allLevelsFileLevelReader
 --  return $ allLevels V.!? n
 

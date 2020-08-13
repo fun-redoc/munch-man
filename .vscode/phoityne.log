@@ -7,3 +7,9 @@
 2020-08-09 11:01:00.797752000000 [27937(ThreadId 12)] CRITICAL THREAD_MGR - Critical exit started.
 2020-08-09 11:08:46.484741000000 [28120(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
 2020-08-09 11:08:52.067352000000 [28120(ThreadId 12)] CRITICAL THREAD_MGR - Critical exit started.
+2020-08-10 09:36:40.472408000000 [36280(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2020-08-10 09:37:52.282993000000 [36358(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2020-08-10 09:38:23.379532000000 [36280(ThreadId 12)] CRITICAL THREAD_MGR - Critical exit started.
+2020-08-10 09:38:36.933535000000 [36358(ThreadId 12)] CRITICAL THREAD_MGR - Critical exit started.
+2020-08-10 09:39:16.441598000000 [36438(ThreadId 9)] ERROR APP - start debugging failed. user error (ExecResult not found.) : Left "user error (ExecResult not found.)"
+2020-08-10 09:41:10.672521000000 [36438(ThreadId 12)] CRITICAL THREAD_MGR - Critical exit started.

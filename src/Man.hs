@@ -29,8 +29,8 @@ data ManState = ManState
               , _object::ManShape
               } deriving (Show, Eq)
 makeLenses ''ManState
-mkManState::ManState
-mkManState = ManState (ManActionStop DirRight) 0 0 1.0 (0.0,0.0,0.5)
+mkManState::Maybe CircleEntity -> ManState
+mkManState manObject = ManState (ManActionStop DirRight) 0 0 1.0 $ maybe (0.0,0.0,0.8) id manObject
 
 updateManAction::ManState->ManAction->ManState
 updateManAction manState manAction = manState&action .~ manAction

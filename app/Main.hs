@@ -11,7 +11,8 @@ import Step
 import Pill
 import Game
 import World
-import Render
+import Rendering.Configuration
+import Rendering.Render
 
 --import qualified Data.Vector as V
 import Data.Either
@@ -148,7 +149,8 @@ main = AL.withProgNameAndArgs AL.runALUT $ \progName args -> do
                           --          exitFailure
   let initialGame = World 0 GameEventNoOp StartGame
   gameConf <- mkConfiguration
-  let window = InWindow ("Munchman "++show appMode) (round screenWidth, round screenHeight) (100, 100)
+  let window = InWindow ("Munchman "++show appMode) (round (gameConf^.screenWidth), round (gameConf^.screenHeight)) (100, 100)
+  let backgroundColor = makeColor 0 0 0 255
   playIO window backgroundColor 30 initialGame
               (\w-> do rawPic <- evalStateT (gameAsPictureState gameConf) w
                        return $ rawPic

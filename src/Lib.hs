@@ -46,22 +46,6 @@ instance Entity RectEntity where
   move dt DirUp    vel (x,y,w,h) = (x,y-vel*dt,w,h)
   move dt DirDown  vel (x,y,w,h) = (x,y+vel*dt,w,h)
 
-
-
---data Direction = GoLeft | GoRight  | GoUp | GoDown | Stop Direction
-----data Man = Man {_manEntity::CircleEntity, _manSpeed::AbsVelocity, _dir::Direction}
-----makeLenses ''Man
-----data Ghost = Ghost {_ghostPos::Position, _vel::Velocity, _g::StdGen}
-----makeLenses ''Ghost
---
---
---toDirVec::Direction->AbsVelocity->Velocity
---toDirVec (Stop _) _    = (0,0)
---toDirVec GoLeft speed  = (-speed, 0)
---toDirVec GoRight speed = (speed, 0)
---toDirVec GoUp speed    = (0, speed)
---toDirVec GoDown speed  = (0, -speed)
-
 add::(Num a)=>(a,a)->(a,a)->(a,a)
 add (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
