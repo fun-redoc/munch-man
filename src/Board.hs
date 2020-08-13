@@ -33,7 +33,7 @@ toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s) (GameField []
                   'O' -> gf&bpills <>~[(col,row,0.2)]
                   '.' -> gf&ypills <>~[(col,row,0.1)]
                   '=' -> gf&tunnel <>~[(col,row,1,1)]
-                  '@' -> gf&man .~ Just (col,row, 0.8)
+                  '@' -> gf&man .~ Just (col+0.5,row+0.5, 0.4)
                   '_' -> gf
                   _ -> undefined
 
@@ -60,36 +60,3 @@ board = [ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         , "X..................................X"
         , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
         ] 
---board = [ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
---        , "X............XX..........XX..........XX............X"
---        , "X.XXXX.XXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXX.XXXX.X"
---        , "X.XXXX.XXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXX.XXXX.X"
---        , "X.XXXX.XXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXX.XXXX.X"
---        , "XO................................................OX"
---        , "X.XXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXX.X"
---        , "X.XXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXX.X"
---        , "X......XX....XX....XX....XX....XX....XX....XX......X"
---        , "XXXXXX.XX.XX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XX.XX.XXXXXX"
---        , "XXXXXX.XX.XX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XX.XX.XXXXXX"
---        , "XXXXXX.XX.XX.......XX..........XX.......XX.XX.XXXXXX"
---        , "XXXXXX.XX.XX.XXXXX.XX.XXXX_XXX.XX.XXXXX.XX.XX.XXXXXX"
---        , "XXXXXX.XX.XX.XXXXX.XX.XXXX_XXX.XX.XXXXX.XX.XX.XXXXXX"
---        , "=............XX.......XXXX_XXX.......XX............="
---        , "XXXXXX.XX.XXXXX.XXXXX.XXXXXXXX.XXXXX.XXXXX.XX.XXXXXX"
---        , "XXXXXX.XX.XXXXX.XXXXX.XXXXXXXX.XXXXX.XXXXX.XX.XXXXXX"
---        , "XXXXXX.XX..........XX..........XX..........XX.XXXXXX"
---        , "XXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXX"
---        , "XXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXX"
---        , "XO...........XX..........XX..........XX...........OX"
---        , "X.XXXX.XXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXX.XXXX.X"
---        , "X.XXXX.XXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXX.XXXX.X"
---        , "X...XX........................................XX...X"
---        , "XXX.XX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XX.XXX"
---        , "XXX.XX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XX.XXX"
---        , "X......XX....XX....XX....XX....XX....XX....XX......X"
---        , "X.XXXXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXXXX.X"
---        , "X.XXXXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXX.XX.XXXXXXXXXX.X"
---        , "X..................................................X"
---        , "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
---        ] 
-

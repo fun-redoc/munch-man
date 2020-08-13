@@ -49,15 +49,15 @@ manStateAsPicture::GameConfiguraton->ManState->Picture
 manStateAsPicture gameConf manState = manTexture
   where
     manTexture = case manState^.action of
-                      (ManActionGo dir)                             -> translate posx posy
-                                                                       $ scale (r*gameConf^.scaleFactors._1) (r*gameConf^.scaleFactors._2) 
+                      (ManActionGo dir)                             -> adjustToScale
                                                                        $ fst $ dirToTexture gameConf dir
-                      (ManActionStop dir)                           -> translate posx posy
-                                                                       $ scale (r*gameConf^.scaleFactors._1) (r*gameConf^.scaleFactors._2)  
+                      (ManActionStop dir)                           -> adjustToScale
                                                                        $ fst $ dirToTexture gameConf dir
                       (ManActionEat  pill dir digestTime)           -> undefined -- Blank -- TODO
                       (ManActionGhostCollition ghost dir dyingTime) -> undefined -- Blank -- TODO
-    (posx, posy, r) = (\(x,y,r) -> (x*gameConf^.factorX,y*gameConf^.factorY,r)) (manState^.object)
+    (posx, posy, d) = (\(x,y,r) -> ((x-0.5)*gameConf^.factorX,(y-0.5)*gameConf^.factorY,r*2)) (manState^.object)
+    adjustToScale::Picture->Picture
+    adjustToScale   =  translate posx posy . scale (d*gameConf^.scaleFactors._1) (d*gameConf^.scaleFactors._2) 
 
 wallAsPicture::GameConfiguraton->RectEntity->Picture
 wallAsPicture gameConf (x,y,w,h) =
@@ -70,9 +70,16 @@ wallsAsPicture gameConf objects =
         (wallAsPicture gameConf) 
         objects
     
+redBoxAsPicture::GameConfiguraton->RectEntity->Picture
+redBoxAsPicture gameConf (x,y,w,h) =
+--    translate ((x+w/2)*gameConf^.factorX) ((y+h/2)*gameConf^.factorY) 
+--    $ (Color red  $ rectangleSolid (w*(gameConf^.factorX)) (h*(gameConf^.factorY)))
+    translate ((1)*gameConf^.factorX) ((1)*gameConf^.factorY) 
+    $ (Color red  $ rectangleSolid (1*(gameConf^.factorX)) (1*(gameConf^.factorY)))
 
 playingSceneAsPicture::GameConfiguraton->Game->StateT World IO Picture
 playingSceneAsPicture gameConf game = return $
   pictures ((wallsAsPicture gameConf (game^.field.walls))
            ++ [ manStateAsPicture gameConf (game^.manState) ]
+--           ++ [ redBoxAsPicture gameConf (0,0,1,1)]
            )
