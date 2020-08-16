@@ -8,6 +8,10 @@ data Pill
   deriving (Show, Eq)  
 
 
-score::Pill->Int
-score (YellowPill _) = 1
-score (BluePill   _) = 5
+pillScore::Pill->Int
+pillScore (YellowPill _) = 1
+pillScore (BluePill   _) = 5
+
+pillCircleEntity::Pill->CircleEntity 
+pillCircleEntity (YellowPill ce) = ce
+pillCircleEntity (BluePill ce) = ce

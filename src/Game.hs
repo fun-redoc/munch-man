@@ -16,11 +16,15 @@ import Event
 import Man
 import Pill
 import Ghost
-import Board
+import qualified Board as Board
 
 
 data Game = Game { _level::Int
-                 , _field::GameField
+--                 , _field::GameField
+                 , _tunnels::[RectEntity]
+                 , _walls::[RectEntity]
+                 , _pills::[Pill]
+                 , _ghosts::[Ghost]
                  , _manState::ManState
                  }
 makeLenses ''Game
@@ -55,29 +59,29 @@ playScenePlaying dt (GameEventManGo dir) game =
            -- preliminary move man
            . over manState (handlePreliminaryManMove dt dir) 
            -- move ghosts
-           . over (field.ghosts) id  --TODO
+           . over (Game.ghosts) id  --TODO
            $ game
 playScenePlaying dt GameEventNoOp game =
     return . either Playing LostGame -- Right = Scene change, Left = stay in scene
            . ghostCollision 
            -- start digesting pill, change man state
            -- TODO also think on blue pills
-           . (\g -> let ypill' = find (hasPillCollision (g^.manState.Man.object)) (g^.field.ypills) 
+           . (\g -> let pill' = find (hasPillCollision (g^.manState)) (g^.pills) 
                     in  maybe
                           g
                           (\yp -> case g^.manState.action of
-                                    ManActionGo dir      -> g&field.ypills %~ (delete yp)
-                                                             &manState.yellow +~ 1
-                                                             &manState.action .~ ManActionEat (YellowPill yp) dir 0.1
-                                    ManActionEat _ dir _ -> g&field.ypills %~ (delete yp)
-                                                             &manState.yellow +~ 1
-                                                             &manState.action .~ ManActionEat (YellowPill yp) dir 0.1
-                                    ManActionStop  dir   -> g&field.ypills %~ (delete yp)
-                                                             &manState.yellow +~ 1
-                                                             &manState.action .~ ManActionEat (YellowPill yp) dir 0.1
+                                    ManActionGo dir      -> g&pills %~ (delete yp)
+                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.action .~ ManActionEat yp dir 0.1
+                                    ManActionEat _ dir _ -> g&pills %~ (delete yp)
+                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.action .~ ManActionEat yp dir 0.1
+                                    ManActionStop  dir   -> g&pills %~ (delete yp)
+                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.action .~ ManActionEat yp dir 0.1
                                     otherwise            -> (trace $ show (g^.manState)) $ undefined -- TODO
                           )
-                          ypill' 
+                          pill' 
              )
            -- adjust man running against wall
            . over manState (handleWallsCollision game)
@@ -95,7 +99,7 @@ playScenePlaying dt GameEventNoOp game =
                                   ManActionGhostCollition ghost dir dyingTime -> undefined
                            )                                 
            -- move ghosts
-           . over (field.ghosts) id  --TODO
+           . over (ghosts) id  --TODO
            $ game
 playScenePlaying dt GameEventManStop game = 
     return . either Playing LostGame-- Right = Scene change, Left = stay in scene
@@ -108,7 +112,7 @@ playScenePlaying dt GameEventManStop game =
                                         ManActionGhostCollition ghost dir dyingTime -> undefined
                            )                                 
            -- move ghosts
-           . over (field.ghosts) id  --TODO
+           . over (ghosts) id  --TODO
            $ game
 playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ "\" in Playing Scene.")
 
@@ -116,9 +120,13 @@ playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ 
 playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
 playSceneStartGame dt GameEventStartGame = return $ Playing mkGame
   where mkGame::Game
-        mkGame    = Game 0 gameField manState
-        gameField = mkGameField 
-        manState  = mkManState (gameField^.man)
+        mkGame    = Game 0 (gameField^.Board.tunnels) 
+                           (gameField^.Board.walls) 
+                           ((YellowPill <$> (gameField^.Board.ypills)) ++ (BluePill <$> (gameField^.Board.bpills)))
+                           (gameField^.Board.ghosts) 
+                           manState 
+        gameField = Board.mkGameField 
+        manState  = mkManState (gameField^.Board.man)
 playSceneStartGame _ _  = return $ StartGame
 
 -- | checks if there was a ghost collision
@@ -126,8 +134,12 @@ ghostCollision::Game->Either Game Game
 ghostCollision game = -- TODO there is no collision detection yet
                       Left game -- default case, no collison
 
-hasPillCollision::CircleEntity->CircleEntity->Bool
-hasPillCollision c1@(x1,y1,r1) c2@(x2,y2,r2) =
+hasPillCollision::ManState->Pill->Bool
+hasPillCollision m p = case p of
+                         YellowPill circleEntity -> hasPillCollision' (m^.Man.object) circleEntity
+                         BluePill   circleEntity -> hasPillCollision' (m^.Man.object) circleEntity
+hasPillCollision'::CircleEntity->CircleEntity->Bool
+hasPillCollision' c1@(x1,y1,r1) c2@(x2,y2,r2) =
   let distx = x1 - x2
       disty = y1 - y2
       distSqrd = distx*distx + disty*disty
@@ -147,21 +159,21 @@ handlePreliminaryManMove dt dir  s = set lastState (Just s)
                                      . over (Man.object) (move dt dir (s^.Man.speed)) 
                                      $ s
            
-handleWallsCollision game s = if any (hasCollision (s^.Man.object)) (game^.field.walls) 
+handleWallsCollision game s = if any (hasCollision (s^.Man.object)) (game^.walls) 
                           then maybe undefined id (s^.lastState)
                           else s
 
 -- | check if game is won
 -- TODO 
-isWon::GameField->Bool
+isWon::Game->Bool
 isWon _ = False
 
 -- | read a level file, starting with 0
 -- TODO
-fileLevelReader ::  Int -> IO (Maybe GameField)
+fileLevelReader ::  Int -> IO (Maybe Board.GameField)
 fileLevelReader n = do
   -- mock empty Field  
-  return $  Just (GameField [] [] [] [] [] Nothing)
+  return $  Just (Board.GameField [] [] [] [] [] Nothing)
 --  allLevels <- allLevelsFileLevelReader
 --  return $ allLevels V.!? n
 

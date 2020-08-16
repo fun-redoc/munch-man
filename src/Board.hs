@@ -11,7 +11,7 @@ import Lib
 import Ghost
 
 data GameField = GameField { _walls:: [RectEntity]
-                           , _tunnel::[RectEntity]
+                           , _tunnels::[RectEntity]
                            , _ypills::[CircleEntity]
                            , _bpills::[CircleEntity]
                            , _ghosts::[Ghost]
@@ -32,7 +32,7 @@ toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s) (GameField []
                   'X' -> gf&walls  <>~[(col,row,1,1)]
                   'O' -> gf&bpills <>~[(col+0.5,row+0.5,0.3)]
                   '.' -> gf&ypills <>~[(col+0.5,row+0.5,0.1)]
-                  '=' -> gf&tunnel <>~[(col,row,1,1)]
+                  '=' -> gf&tunnels <>~[(col,row,1,1)]
                   '@' -> gf&man .~ Just (col+0.5,row+0.5, 0.4)
                   '_' -> gf
                   _ -> undefined

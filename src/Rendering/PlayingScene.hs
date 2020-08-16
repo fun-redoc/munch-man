@@ -10,7 +10,7 @@ import Event
 import Step
 import Pill
 import Game
-import Board
+--import Board
 import World
 import Rendering.Configuration
 
@@ -79,8 +79,9 @@ pillAsPicture gameConf c (x,y,r) =
 
 playingSceneAsPicture::GameConfiguraton->Game->StateT World IO Picture
 playingSceneAsPicture gameConf game = return $
-  pictures ((wallsAsPicture gameConf (game^.field.walls))
-           ++ (map (pillAsPicture gameConf Graphics.Gloss.Data.Color.yellow) (game^.field.ypills) )
-           ++ (map (pillAsPicture gameConf Graphics.Gloss.Data.Color.blue) (game^.field.bpills) )
+  pictures ((wallsAsPicture gameConf (game^.walls))
+           ++ (map (\pill->pillAsPicture gameConf (pillColor pill) (pillCircleEntity pill)) (game^.pills) )
            ++ [ manStateAsPicture gameConf (game^.manState) ]
            )
+    where pillColor (BluePill _) = blue
+          pillColor (YellowPill _) = yellow

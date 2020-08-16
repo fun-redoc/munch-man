@@ -23,8 +23,7 @@ data ManAction
 
 data ManState = ManState
               { _action::ManAction
-              , _yellow::Int
-              , _blue::Int
+              , _score::Int
               , _speed::Float
               , _object::ManShape
               , _lastState::Maybe ManState
@@ -32,7 +31,7 @@ data ManState = ManState
 makeLenses ''ManState
 mkManState::Maybe CircleEntity -> ManState
 --mkManState manObject = ManState (ManActionStop DirRight) 0 0 1.0 (0.4,0.4,0.4) Nothing
-mkManState manObject = ManState (ManActionStop DirRight) 0 0 1.0 (maybe (0.0,0.0,0.4) id manObject) Nothing
+mkManState manObject = ManState (ManActionStop DirRight) 0 1.0 (maybe (0.0,0.0,0.4) id manObject) Nothing
 
 updateManAction::ManState->ManAction->ManState
 updateManAction manState manAction = manState&action .~ manAction
