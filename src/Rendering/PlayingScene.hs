@@ -26,6 +26,7 @@ import Codec.Picture
 import Graphics.Gloss.Interface.IO.Game
 import Graphics.Gloss
 import Graphics.Gloss.Juicy
+import Graphics.Gloss.Data.Color
 import System.IO hiding (hGetContents)
 import System.IO.Strict (hGetContents)
 import System.IO.Error
@@ -53,7 +54,8 @@ manStateAsPicture gameConf manState = manTexture
                                                                        $ fst $ dirToTexture gameConf dir
                       (ManActionStop dir)                           -> adjustToScale
                                                                        $ fst $ dirToTexture gameConf dir
-                      (ManActionEat  pill dir digestTime)           -> undefined -- Blank -- TODO
+                      (ManActionEat  pill dir digestTime)           -> adjustToScale
+                                                                       $ snd $ dirToTexture gameConf dir
                       (ManActionGhostCollition ghost dir dyingTime) -> undefined -- Blank -- TODO
     (posx, posy, d) = (\(x,y,r) -> ((x-0.5)*gameConf^.factorX,(y-0.5)*gameConf^.factorY,r*2)) (manState^.object)
     adjustToScale::Picture->Picture
@@ -69,17 +71,16 @@ wallsAsPicture gameConf objects =
     map
         (wallAsPicture gameConf) 
         objects
-    
-redBoxAsPicture::GameConfiguraton->RectEntity->Picture
-redBoxAsPicture gameConf (x,y,w,h) =
---    translate ((x+w/2)*gameConf^.factorX) ((y+h/2)*gameConf^.factorY) 
---    $ (Color red  $ rectangleSolid (w*(gameConf^.factorX)) (h*(gameConf^.factorY)))
-    translate ((1)*gameConf^.factorX) ((1)*gameConf^.factorY) 
-    $ (Color red  $ rectangleSolid (1*(gameConf^.factorX)) (1*(gameConf^.factorY)))
+
+pillAsPicture::GameConfiguraton->Color->CircleEntity->Picture
+pillAsPicture gameConf c (x,y,r) =
+    translate ((x-0.5)*gameConf^.factorX) ((y-0.5)*gameConf^.factorY) 
+    $ (Color c $ circleSolid (r*(gameConf^.factorX)))
 
 playingSceneAsPicture::GameConfiguraton->Game->StateT World IO Picture
 playingSceneAsPicture gameConf game = return $
   pictures ((wallsAsPicture gameConf (game^.field.walls))
+           ++ (map (pillAsPicture gameConf Graphics.Gloss.Data.Color.yellow) (game^.field.ypills) )
+           ++ (map (pillAsPicture gameConf Graphics.Gloss.Data.Color.blue) (game^.field.bpills) )
            ++ [ manStateAsPicture gameConf (game^.manState) ]
---           ++ [ redBoxAsPicture gameConf (0,0,1,1)]
            )

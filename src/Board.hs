@@ -30,8 +30,8 @@ toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s) (GameField []
           cellToGameField gf row col c = 
               case c of
                   'X' -> gf&walls  <>~[(col,row,1,1)]
-                  'O' -> gf&bpills <>~[(col,row,0.2)]
-                  '.' -> gf&ypills <>~[(col,row,0.1)]
+                  'O' -> gf&bpills <>~[(col+0.5,row+0.5,0.3)]
+                  '.' -> gf&ypills <>~[(col+0.5,row+0.5,0.1)]
                   '=' -> gf&tunnel <>~[(col,row,1,1)]
                   '@' -> gf&man .~ Just (col+0.5,row+0.5, 0.4)
                   '_' -> gf
