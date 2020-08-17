@@ -6,11 +6,11 @@ import Debug.Trace (trace)
 
 import Lib
 import Man
+import Ghost
 import Event
 import Step
 import Pill
 import Game
---import Board
 import World
 import Rendering.Configuration
 
@@ -46,6 +46,13 @@ dirToTexture gameConf dir = case dir of
                                   DirUp       -> (gameConf^.manU1,gameConf^.manU2)
                                   DirDown     -> (gameConf^.manD1,gameConf^.manD2)
 
+ghostAsPicture::GameConfiguraton->Ghost->Picture
+ghostAsPicture gameConf ghost = adjustToScale (gameConf^.ghostPic)
+  where
+    (posx, posy, w,h) = (\(x,y,w,h) -> (x*gameConf^.factorX,y*gameConf^.factorY,w,h)) (ghost^.Ghost.object)
+    adjustToScale::Picture->Picture
+    adjustToScale   =  translate posx posy . scale (w*gameConf^.ghostPicSize._1) (h*gameConf^.ghostPicSize._2) 
+
 manStateAsPicture::GameConfiguraton->ManState->Picture
 manStateAsPicture gameConf manState = manTexture
   where
@@ -57,7 +64,7 @@ manStateAsPicture gameConf manState = manTexture
                       (ManActionEat  pill dir digestTime)           -> adjustToScale
                                                                        $ snd $ dirToTexture gameConf dir
                       (ManActionGhostCollition ghost dir dyingTime) -> undefined -- Blank -- TODO
-    (posx, posy, d) = (\(x,y,r) -> ((x-0.5)*gameConf^.factorX,(y-0.5)*gameConf^.factorY,r*2)) (manState^.object)
+    (posx, posy, d) = (\(x,y,r) -> ((x-0.5)*gameConf^.factorX,(y-0.5)*gameConf^.factorY,r*2)) (manState^.Man.object)
     adjustToScale::Picture->Picture
     adjustToScale   =  translate posx posy . scale (d*gameConf^.scaleFactors._1) (d*gameConf^.scaleFactors._2) 
 
@@ -81,6 +88,7 @@ playingSceneAsPicture::GameConfiguraton->Game->StateT World IO Picture
 playingSceneAsPicture gameConf game = return $
   pictures ((wallsAsPicture gameConf (game^.walls))
            ++ (map (\pill->pillAsPicture gameConf (pillColor pill) (pillCircleEntity pill)) (game^.pills) )
+           ++ (map (ghostAsPicture gameConf) (game^.ghosts))
            ++ [ manStateAsPicture gameConf (game^.manState) ]
            )
     where pillColor (BluePill _) = blue

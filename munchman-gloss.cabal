@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 404741b03469af9a3c42fdeedee10c22e9858e3c419579daed4d1decadedc79b
+-- hash: 77e09c5e6d6138560810dd04aac3ef5f31b87a0e6e72fa01ed2ae269288837c2
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -31,6 +31,9 @@ data-files:
     PacManU2s.png
     PacManD1s.png
     PacManD2s.png
+    Ghost1.png
+    Ghost2.png
+    Ghost3.png
 data-dir:       data
 
 source-repository head

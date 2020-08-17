@@ -18,6 +18,9 @@ data-files:
 - PacManU2s.png
 - PacManD1s.png
 - PacManD2s.png
+- Ghost1.png
+- Ghost2.png
+- Ghost3.png
 
 extra-source-files:
 - README.md

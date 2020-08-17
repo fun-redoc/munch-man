@@ -20,7 +20,7 @@ import qualified Board as Board
 
 
 data Game = Game { _level::Int
---                 , _field::GameField
+                 , _path::[Vec]
                  , _tunnels::[RectEntity]
                  , _walls::[RectEntity]
                  , _pills::[Pill]
@@ -38,16 +38,19 @@ data GameScene = StartGame
 makeLenses ''GameScene
 playScene::(Monad m)=>DeltaTime->GameEvent->GameScene->m GameScene
 playScene dt evt s = case s of
-                       StartGame         -> playSceneStartGame dt evt
-                       (Playing game)    -> playScenePlaying dt evt game
-                       (LostGame game)    -> undefined -- TODO
-                       (WonGame game)    -> undefined -- TODO
-                       FinishedAllLevels -> undefined -- TODO
-                       (ErrorState _)    -> return s
+                        StartGame         -> playSceneStartGame dt evt
+                        (Playing game)    -> playScenePlaying dt evt (updateGhosts dt game)
+                        (LostGame game)    -> undefined -- TODO
+                        (WonGame game)    -> undefined -- TODO
+                        FinishedAllLevels -> undefined -- TODO
+                        (ErrorState _)    -> return s
 
+updateGhosts::DeltaTime->Game->Game
+--updateGhosts dt game = over ghosts (map (moveGhostRandomly dt)) game
+updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.path) dt)) game
 
 playScenePlaying::(Monad m)=>DeltaTime->GameEvent->Game->m GameScene
-playScenePlaying dt (GameEventManGo dir) game =
+playScenePlaying dt (GameEventManGo dir _) game =
     return . either Playing LostGame-- Right = Scene change, Left = stay in scene
            . ghostCollision 
            -- start digesting pill, change man state
@@ -58,10 +61,8 @@ playScenePlaying dt (GameEventManGo dir) game =
            . over (manState.Man.object) id -- TODO
            -- preliminary move man
            . over manState (handlePreliminaryManMove dt dir) 
-           -- move ghosts
-           . over (Game.ghosts) id  --TODO
            $ game
-playScenePlaying dt GameEventNoOp game =
+playScenePlaying dt (GameEventNoOp _) game =
     return . either Playing LostGame -- Right = Scene change, Left = stay in scene
            . ghostCollision 
            -- start digesting pill, change man state
@@ -98,10 +99,8 @@ playScenePlaying dt GameEventNoOp game =
                                                                         &Man.object %~ (move dt dir (s^.Man.speed))
                                   ManActionGhostCollition ghost dir dyingTime -> undefined
                            )                                 
-           -- move ghosts
-           . over (ghosts) id  --TODO
            $ game
-playScenePlaying dt GameEventManStop game = 
+playScenePlaying dt (GameEventManStop _) game = 
     return . either Playing LostGame-- Right = Scene change, Left = stay in scene
            . ghostCollision 
            -- preliminary move man
@@ -111,20 +110,24 @@ playScenePlaying dt GameEventManStop game =
                                         ManActionEat  pill dir digestTime -> s&action .~ ManActionStop dir
                                         ManActionGhostCollition ghost dir dyingTime -> undefined
                            )                                 
-           -- move ghosts
-           . over (ghosts) id  --TODO
            $ game
 playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ "\" in Playing Scene.")
 
 
 playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
-playSceneStartGame dt GameEventStartGame = return $ Playing mkGame
+playSceneStartGame dt (GameEventStartGame t) = return $ Playing mkGame
   where mkGame::Game
-        mkGame    = Game 0 (gameField^.Board.tunnels) 
-                           (gameField^.Board.walls) 
-                           ((YellowPill <$> (gameField^.Board.ypills)) ++ (BluePill <$> (gameField^.Board.bpills)))
-                           (gameField^.Board.ghosts) 
-                           manState 
+        mkGame    = Game 0 
+                         (gameField^.Board.path)
+                         (gameField^.Board.tunnels) 
+                         (gameField^.Board.walls) 
+                         ((YellowPill <$> (gameField^.Board.ypills)) ++ (BluePill <$> (gameField^.Board.bpills)))
+                         (map (\(g,i)->(mkGhost ((t+11*i)*1000000)  -- more variance for the initial randemo gen seed
+                                                (gameField^.Board.path) 
+                                                g
+                                       )
+                              ) (zip (gameField^.Board.ghosts) ([0..]::[Float]))) -- initalize random generator of each ghost wir different values
+                         manState 
         gameField = Board.mkGameField 
         manState  = mkManState (gameField^.Board.man)
 playSceneStartGame _ _  = return $ StartGame
@@ -173,7 +176,6 @@ isWon _ = False
 fileLevelReader ::  Int -> IO (Maybe Board.GameField)
 fileLevelReader n = do
   -- mock empty Field  
-  return $  Just (Board.GameField [] [] [] [] [] Nothing)
+  return $  Just (Board.GameField [] [] [] [] [] Nothing [])
 --  allLevels <- allLevelsFileLevelReader
 --  return $ allLevels V.!? n
-

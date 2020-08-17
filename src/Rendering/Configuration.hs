@@ -55,6 +55,8 @@ data GameConfiguraton = GameConfiguraton { _objectSize::Size
                                          , _manU2::Picture
                                          , _manD1::Picture
                                          , _manD2::Picture
+                                         , _ghostPic::Picture
+                                         , _ghostPicSize::Point
                                          }
 makeLenses ''GameConfiguraton
 
@@ -80,6 +82,7 @@ mkConfiguration = do
     (packManD2', packManD2Size) <- loadPng "PacManU2s.png"
     let packManD1 = scale 1 1 packManD1'
     let packManD2 = scale 1 1 packManD2'
+    (ghostPic, ghostPicSize) <- loadPng "Ghost1.png"
 
     let objectSize = uncurry max packManR1Size
 
@@ -113,6 +116,8 @@ mkConfiguration = do
                                    packManU2
                                    packManD1
                                    packManD2
+                                   ghostPic
+                                   (factorX/(ghostPicSize^._1), factorY/(ghostPicSize^._2))
     return gameConf
 
 

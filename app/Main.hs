@@ -126,10 +126,11 @@ handleInputIOState evt = do world <- get
 -- | the game loop with state
 gameLoopIOState::Float                 -- ^ time passed since last loop in sec.
                -> StateT World IO ()   -- ^ the game state
-gameLoopIOState dt = do world <- get
-                        if world^.event == GameEventQuit
+gameLoopIOState dt = do time += dt
+                        world <- get
+                        if (world^.event) 0 == GameEventQuit 0
                           then liftIO exitSuccess
-                          else do scene' <- playScene dt (world^.event) (world^.scene)
+                          else do scene' <- playScene dt  ((world^.event) (world^.time)) (world^.scene)
                                   scene .= scene'
                                   event .= GameEventNoOp
 

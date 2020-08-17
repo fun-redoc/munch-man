@@ -11,7 +11,7 @@ import Game
 import Control.Lens
 
 data World  = World { _time::Float
-                    , _event::GameEvent
+                    , _event::Time->GameEvent
                     , _scene::GameScene
                     }
 makeLenses ''World
