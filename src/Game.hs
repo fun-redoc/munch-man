@@ -47,7 +47,9 @@ playScene dt evt s = case s of
 
 updateGhosts::DeltaTime->Game->Game
 --updateGhosts dt game = over ghosts (map (moveGhostRandomly dt)) game
-updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.path) dt)) game
+updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.manState.Man.object) 
+                                                          (game^.ghosts)
+                                                          (game^.path) dt)) game
 
 playScenePlaying::(Monad m)=>DeltaTime->GameEvent->Game->m GameScene
 playScenePlaying dt (GameEventManGo dir _) game =
@@ -118,7 +120,7 @@ playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
 playSceneStartGame dt (GameEventStartGame t) = return $ Playing mkGame
   where mkGame::Game
         mkGame    = Game 0 
-                         (gameField^.Board.path)
+                         (nub $ gameField^.Board.path)
                          (gameField^.Board.tunnels) 
                          (gameField^.Board.walls) 
                          ((YellowPill <$> (gameField^.Board.ypills)) ++ (BluePill <$> (gameField^.Board.bpills)))

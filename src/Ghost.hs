@@ -3,6 +3,7 @@ module Ghost where
 
 import Debug.Trace (trace)
 
+import Data.List
 import Data.Maybe
 import Control.Lens
 import System.Random
@@ -27,14 +28,26 @@ mkGhost f path ghostObject@(x,y,w,h) = Ghost ghostObject dest' dir' 1.0 rg'
     dest' = (x',y')
     dir' = (x'-x,y'-y)
 
-moveGhostOnRails::[Vec]->DeltaTime->Ghost->Ghost
-moveGhostOnRails path dt ghost =
+moveGhostOnRails::Entity e=>e->[Ghost]->[Vec]->DeltaTime->Ghost->Ghost
+moveGhostOnRails man allGhosts path dt ghost =
   let rg = ghost^.randomGen
       (x,y,w,h) = ghost^.object
+      allGhostsPositions = map (\Ghost{_object=(x,y,_,_)}->(x,y)) allGhosts
       destReached = (~=) 0.01 (ghost^.dest) (x,y)
-      neighbours = findNeighbours 1.1 path (x,y)
-      ((x',y'), rg') = randomPick rg neighbours
-      dest' = (x', y')
+      manPos = position man
+      neighbours' = findNeighbours 1.1 (path \\ allGhostsPositions) (x,y)
+      neighbours'' = findNeighbours 1.1 (delete (x,y) path) (x,y)
+      ((x'',y''), rg'') = randomPick rg neighbours''
+      ((x''', y'''), rg''') = if null neighbours'
+                        --then ((x'', y''), rg'')
+                        then (minimumBy (\n1 n2-> compare (distSqrd n1 manPos) (distSqrd n2 manPos) ) neighbours''
+                             ,rg
+                             )
+                        else (minimumBy (\n1 n2-> compare (distSqrd n1 manPos) (distSqrd n2 manPos) ) neighbours'
+                             ,rg
+                             )
+      ((x',y'), rg') = randomPick rg''' ((x''',y'''):neighbours') -- [(x'',y''), (x''',y''')]
+      dest' = (x',y')
       dir' = (x'-x, y'-y)
       ghost1 = ghost&randomGen .~ rg'
   in if destReached
