@@ -51,6 +51,7 @@ dependencies:
 - ALUT
 - random
 - JuicyPixels
+- GraphTheory
 
 library:
   source-dirs: src

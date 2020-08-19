@@ -18,6 +18,12 @@ import Pill
 import Ghost
 import qualified Board as Board
 
+import qualified Graph as G
+import qualified UGraph as UG
+import AdjacenceMatrix
+import GraphAlgorithms
+import PriorityQueue
+
 
 data Game = Game { _level::Int
                  , _path::[Vec]

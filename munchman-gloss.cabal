@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 77e09c5e6d6138560810dd04aac3ef5f31b87a0e6e72fa01ed2ae269288837c2
+-- hash: 7b87022836ede8c51e1958cd7656b62550192c6108d2833be5bbde941ef40864
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -64,6 +64,7 @@ library
       src
   build-depends:
       ALUT
+    , GraphTheory
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
@@ -91,6 +92,7 @@ executable munchman-gloss-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ALUT
+    , GraphTheory
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
@@ -118,6 +120,7 @@ test-suite munchman-gloss-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       ALUT
+    , GraphTheory
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
