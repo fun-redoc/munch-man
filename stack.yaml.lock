@@ -33,6 +33,13 @@ packages:
   original:
     hackage: haskell-debug-adapter-0.0.33.0@sha256:64a72048080eb599d733cbcbeb9dec1852c19f9c4672cd3d1f00e68058c63fba,6503
 - completed:
+    hackage: repa-3.4.1.4@sha256:70ef4758937baa29be1ac0a78ecbccf341b3f276c9efb632b4829eea80445e2d,3315
+    pantry-tree:
+      size: 2965
+      sha256: 294773b0e6be4a4198133715d4c7f2d0d8e5aec4adea7e59578d1b3823a7879d
+  original:
+    hackage: repa-3.4.1.4@sha256:70ef4758937baa29be1ac0a78ecbccf341b3f276c9efb632b4829eea80445e2d,3315
+- completed:
     name: GraphTheory
     version: 0.1.0.0
     git: https://github.com/fun-redoc/GraphTheory.git

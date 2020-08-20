@@ -8,6 +8,10 @@ import Data.Maybe
 import Control.Lens
 import System.Random
 import Lib
+import qualified Data.Array.Repa as R
+import Graph
+import UGraph
+import GraphAlgorithms
 
 data Ghost = Ghost {_object::RectEntity
                    , _dest::Vec

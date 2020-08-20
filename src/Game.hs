@@ -10,6 +10,8 @@ import Control.Monad.Trans.State.Strict
 import Paths_munchman_gloss
 import System.Random
 import qualified Data.Vector as V
+import qualified Data.Array.Repa as R
+import qualified Data.Array.Repa.Eval as R
 
 import Lib
 import Event
@@ -184,6 +186,16 @@ isWon _ = False
 fileLevelReader ::  Int -> IO (Maybe Board.GameField)
 fileLevelReader n = do
   -- mock empty Field  
-  return $  Just (Board.GameField [] [] [] [] [] Nothing [])
+  return $ Nothing -- Just (Board.GameField [] [] [] [] [] Nothing [] 
+                   --                (
+                   --                  R.delay 
+                   --                  $ 
+                   --                  R.fromList
+                   --                  (R.Z R.:. (35::Int) R.:. (20::Int)) 
+                   --                     (take (35*20) 
+                   --                       (repeat (Nothing::(Maybe Pos)))
+                   --                     )
+                   --                )
+                   --       )
 --  allLevels <- allLevelsFileLevelReader
 --  return $ allLevels V.!? n

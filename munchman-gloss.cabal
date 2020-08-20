@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7b87022836ede8c51e1958cd7656b62550192c6108d2833be5bbde941ef40864
+-- hash: 994e63a800b8bde682bfc7c4d4b568a4361c8d91f6c5187ddf7fd55fa0271f36
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -76,6 +76,7 @@ library
     , haskell-debug-adapter
     , lens
     , random
+    , repa
     , strict
     , transformers
     , vector
@@ -105,6 +106,7 @@ executable munchman-gloss-exe
     , lens
     , munchman-gloss
     , random
+    , repa
     , strict
     , transformers
     , vector
@@ -133,6 +135,7 @@ test-suite munchman-gloss-test
     , lens
     , munchman-gloss
     , random
+    , repa
     , strict
     , transformers
     , vector

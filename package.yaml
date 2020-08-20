@@ -50,6 +50,7 @@ dependencies:
 - gloss-juicy
 - ALUT
 - random
+- repa
 - JuicyPixels
 - GraphTheory
 

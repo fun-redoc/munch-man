@@ -41,6 +41,7 @@ extra-deps:
 - ghci-dap-0.0.14.0@sha256:29a0a9e3aa7ffe46b8e1232be26105af53902471e31a23db5431510946542ab9,3145
 - haskell-dap-0.0.14.0@sha256:1befb8a6fce3e05c7cb10a1c883269fbd1c54ff7cec3314fa7dd64dba822a89e,3336
 - haskell-debug-adapter-0.0.33.0@sha256:64a72048080eb599d733cbcbeb9dec1852c19f9c4672cd3d1f00e68058c63fba,6503
+- repa-3.4.1.4@sha256:70ef4758937baa29be1ac0a78ecbccf341b3f276c9efb632b4829eea80445e2d,3315
 - git: https://github.com/fun-redoc/GraphTheory.git
   commit: 68e1aee9402103700d0f15239eae3bc3d0572238
 # - acme-missiles-0.3
