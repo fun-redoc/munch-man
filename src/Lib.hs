@@ -1,14 +1,39 @@
-{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell
+           , FlexibleInstances
+           , MultiParamTypeClasses 
+           , FlexibleContexts
+           , ScopedTypeVariables
+#-}
+
 
 module Lib where
 
-import Data.Maybe (isNothing)
+import Debug.Trace (trace)
+
+import Data.Maybe (isNothing, isJust, fromJust, isNothing)
 import Data.List
 import Control.Lens
 import Paths_munchman_gloss
 import System.Random
 import qualified Data.Vector as V
 
+import qualified Data.Array.Repa as R
+import qualified Data.Array.Repa.Eval as R
+import qualified Data.Array.Repa.Shape as R
+import qualified Data.Array.Repa.Repr.Vector as R
+
+import GHC.Base (join)
+import qualified Data.HashMap.Lazy as M
+import qualified Data.HashSet as S
+import Data.Hashable (Hashable)
+import Data.Semigroup
+
+
+import Data.Graph.Inductive.Graph (Node, mkGraph, lab, labNodes)
+import Data.Graph.Inductive.PatriciaTree (Gr, UGr)
+import Data.Graph.Inductive.Query.SP (sp, spLength)
+import Data.List (elemIndex, nub, sort, find)
+import Data.Maybe (fromJust)
 
 someFunc::IO ()
 someFunc = putStrLn "NOT IMPLEMENTED"
@@ -64,6 +89,64 @@ class RoughlyEq a where
 
 instance RoughlyEq Vec where
   (~=) err (x1,y1) (x2,y2) = (err*err) > ((x1-x2)**2 + (y1-y2)**2)
+
+-- type GG p a = (R.Array R.V R.DIM2) (Maybe (p, a))
+data GG p a = GG {unGG::(R.Array R.V R.DIM2) (Maybe (p, a))}
+
+--toRepaDIM2::[String] -> R.Array R.V R.DIM2 (Maybe Pos)
+toRepaDIM2::[String] -> GG Int Pos
+toRepaDIM2 xs = GG $ R.computeS $ R.traverse
+                  (R.fromListUnboxed (R.Z R.:. (rows::Int) R.:. (cols::Int)) (join $ reverse xs)) -- TODO take sizes from configuration
+                  id
+                  (\f (R.Z R.:. y R.:. x)->extract ((x,y),f (R.ix2 y x)))
+    where extract ((x,y),c) = -- (trace $ show ("Board", x,y,c)) $
+            if (c == 'O' || c == '.' || c == '_' || c == 'G' || c == '@')
+                then Just (1,(x,y))
+                else Nothing
+          rows = length xs
+          cols = if rows > 0 then (length $ xs !! 0) else 0
+
+adjacent_vertices_GG (GG g) (x,y) = let [nRows, nCols] = R.listOfShape $ R.extent g
+                                        xMinus1 = x - 1
+                                        xPlus1  = x + 1
+                                        yMinus1  = y - 1
+                                        yPlus1  = y + 1
+                                        xLeft   = if xMinus1 == -1 then nCols-1 -- tunnel
+                                                                  else xMinus1
+                                        xRight  = if xPlus1 == nCols then 0 -- tunnel
+                                                                    else xPlus1
+                                        yUp     = if yPlus1 == nRows then 0 -- tunnel
+                                                                    else yPlus1
+                                        yDown   = if yMinus1 == -1 then nRows-1 -- tunnel
+                                                                  else yMinus1
+                                        leftNeighbour  = g R.! (R.ix2 y     xLeft )
+                                        rightNeighbour = g R.! (R.ix2 y     xRight)
+                                        upperNeighbour = g R.! (R.ix2 yUp   x)
+                                        lowerNeighbour = g R.! (R.ix2 yDown x)
+                                    in -- (\ns -> (trace (show ns)) ns) $ 
+                                      (map fromJust . filter isJust) $ [leftNeighbour, rightNeighbour, upperNeighbour, lowerNeighbour]
+
+
+
+type FieldGraph = Gr Pos Int
+
+shortest_path::FieldGraph->Pos->Pos->Maybe [Pos]
+shortest_path g start dest = -- (trace (show (start,dest))) $
+    let ln = labNodes g
+        node lab = fst <$> find (\(_,l)->l==lab) ln
+        start'::Maybe Node = node start
+        dest' ::Maybe Node = node dest
+        sp'  = start' >>= (\ start''-> dest' >>= (\dest'' -> (sp start'' dest'' g)))
+    in (map (fromJust . lab g)) <$> sp' 
+-- shortest_path::FieldGraph->Pos->Pos->Maybe [Pos]
+-- shortest_path g start dest = -- (trace (show (start,dest))) $
+--     let ln = labNodes g
+--         node lab = fst $ fromJust $ find (\(_,l)->l==lab) ln
+--         start'::Node = node start
+--         dest' ::Node = node dest
+--         sp'  = (sp start' dest' g)
+--     in (map (fromJust . lab g)) <$> sp' 
+
 
 add::(Num a)=>(a,a)->(a,a)->(a,a)
 add (x1,y1) (x2,y2) = (x1+x2,y1+y2)

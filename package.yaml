@@ -51,6 +51,9 @@ dependencies:
 - ALUT
 - random
 - repa
+- hashable
+- unordered-containers
+- fgl
 - JuicyPixels
 - GraphTheory
 

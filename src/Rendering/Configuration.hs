@@ -89,8 +89,8 @@ mkConfiguration = do
     -- TODO replace configuration passing by Reader Monad
     let screenWidth  = 800::Float
     let screenHeight = 600::Float
-    let fieldWidth::Float = 35
-    let fieldHeight::Float = 20
+    let fieldWidth::Float = 36
+    let fieldHeight::Float = 21
     let factorX::Float = screenWidth/fieldWidth
     let factorY::Float = screenHeight/fieldHeight
     let manRadius = objectSize / 2

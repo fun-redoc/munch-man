@@ -20,6 +20,7 @@ import Pill
 import Ghost
 import qualified Board as Board
 
+import qualified Data.Array.Repa as R
 import qualified Graph as G
 import qualified UGraph as UG
 import AdjacenceMatrix
@@ -55,9 +56,12 @@ playScene dt evt s = case s of
 
 updateGhosts::DeltaTime->Game->Game
 --updateGhosts dt game = over ghosts (map (moveGhostRandomly dt)) game
-updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.manState.Man.object) 
-                                                          (game^.ghosts)
-                                                          (game^.path) dt)) game
+--updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.manState.Man.object) 
+--                                                          (game^.ghosts)
+--                                                          (game^.path) dt)) game
+updateGhosts dt game = over ghosts (map (moveGhostOnRepaPath (game^.manState.Man.object) 
+                                                             --(game^.ghosts)
+                                                             (game^.path) dt)) game
 
 playScenePlaying::(Monad m)=>DeltaTime->GameEvent->Game->m GameScene
 playScenePlaying dt (GameEventManGo dir _) game =
@@ -134,6 +138,7 @@ playSceneStartGame dt (GameEventStartGame t) = return $ Playing mkGame
                          ((YellowPill <$> (gameField^.Board.ypills)) ++ (BluePill <$> (gameField^.Board.bpills)))
                          (map (\(g,i)->(mkGhost ((t+11*i)*1000000)  -- more variance for the initial randemo gen seed
                                                 (gameField^.Board.path) 
+                                                (gameField^.Board.fieldGraph)
                                                 g
                                        )
                               ) (zip (gameField^.Board.ghosts) ([0..]::[Float]))) -- initalize random generator of each ghost wir different values

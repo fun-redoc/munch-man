@@ -4,6 +4,7 @@
            , RankNTypes
            , GADTs
            , MultiParamTypeClasses 
+           , BangPatterns
            #-}
 --{-# LANGUAGE OverloadedStrings #-}
 --{-# LANGUAGE NoMonomorphismRestriction #-}
@@ -20,16 +21,19 @@ import Debug.Trace
 import Data.String
 import Control.Lens
 import Control.Lens.Operators
-import Data.Array.Repa
-import Data.Array.Repa.Eval
-import Data.Array.Repa.Shape
+import qualified Data.Array.Repa as R
+import qualified Data.Array.Repa.Eval as R
+import qualified Data.Array.Repa.Shape as R
+
+import Data.Array.Repa.Repr.Vector
 import Graph
-import UGraph
 import Paths_munchman_gloss
 
 import Lib
 import Ghost
 import GHC.Base (join)
+import Data.List (elemIndex, sort, nub)
+import Data.Graph.Inductive (Graph(mkGraph), undir)
 
 data GameField = GameField { _walls:: [RectEntity]
                            , _tunnels::[RectEntity]
@@ -38,15 +42,16 @@ data GameField = GameField { _walls:: [RectEntity]
                            , _ghosts::[RectEntity]
                            , _man::Maybe CircleEntity
                            , _path::[Vec]
-                           , _repaPath::Array D DIM2 (Maybe Pos)
-                           } deriving (Eq)
+                           , _repaPath::GG Int Pos -- Array V DIM2 (Maybe Pos)
+                           , _fieldGraph::FieldGraph
+                           } 
 makeLenses ''GameField
 mkGameField::GameField
 mkGameField = toGameField board
 
 toGameField::[String]->GameField
 toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s) 
-                       (GameField [] [] [] [] [] Nothing [] (toRepaDIM2 xs))
+                       (GameField [] [] [] [] [] Nothing [] repa fieldGraph)
                  . (zip [1..]) 
                  $ xs
     where rows = fromIntegral $ length xs
@@ -66,43 +71,41 @@ toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s)
                            &path    <>~[(col, row)]
                   '_' -> gf&path    <>~[(col, row)]
                   _ -> undefined
+          !repa = toRepaDIM2 xs
+          ns = map snd $ map fromJust $ filter isJust (R.toList (unGG repa))
+          vertices = nub 
+                   $ foldr 
+                       (\n vs -> let neighbours = map snd $ adjacent_vertices_GG repa n
+                                     vs' = sort $ map (\p -> (n,p)) neighbours 
+                                 in  vs'++vs
+                       ) []
+                       ns
+          fieldGraph = undir $ mkGraph
+                            (map (\n->(fromJust $ elemIndex n ns, n)) ns)
+                            (map (\(n1,n2)->(fromJust $ elemIndex n1 ns, fromJust $ elemIndex n2 ns, 1)) vertices)
 
-toRepaDIM2::[String] -> Array D DIM2 (Maybe Pos)
-toRepaDIM2 = Data.Array.Repa.map extract 
-                 .fromListUnboxed (Z :. (35::Int) :. (20::Int))
-                 .zip [(x,y)| y<-[0..19], x<-[0..34]]
-                 .join 
-    where extract ((x,y),c) = 
-            if (c == 'O' || c == '.' || c == '_' || c == 'G' || c == '@')
-                then Just (x,y)
-                else Nothing
+test_board2::[String]
+test_board2 = ["XXXXX"
+              ,"X___X"
+              ,"X___X"
+              ,"X___X"
+              ,"XXXXX"
+              ]
 
+test_board1::[String]
+test_board1 = ["XXXXXXXXXXX"
+              ,"X_________X"
+              ,"X___XX____X"
+              ,"X_________X"
+              ,"XXXXXXXXXXX"
+              ]
 
--- to lazy to implement all functions, only two really needed...
-instance Graph (Array D DIM2) (Maybe Pos)  where
-  emptyGraph                = undefined
-  num_vertices              = undefined
-  adjacent_vertices  g (Just (x,y)) = let [nCols, nRows] = listOfShape $ extent g
-                                          xMinus1 = x - 1
-                                          xPlus1  = x + 1
-                                          yMinus1  = y - 1
-                                          yPlus1  = y + 1
-                                          xLeft   = if xMinus1 == -1 then nCols-1 -- tunnel
-                                                                    else xMinus1
-                                          xRight  = if xPlus1 == nCols then 0 -- tunnel
-                                                                       else xPlus1
-                                          yUp     = if yPlus1 == nRows then 0 -- tunnel
-                                                                       else yPlus1
-                                          yDown   = if yMinus1 == -1 then nRows-1 -- tunnel
-                                                                     else yMinus1
-                                          leftNeighbour  = g ! (ix2 xLeft y)
-                                          rightNeighbour = g ! (ix2 xRight y)
-                                          upperNeighbour = g ! (ix2 x yUp)
-                                          lowerNeighbour = g ! (ix2 x yDown)
-                                      in filter isJust [leftNeighbour, rightNeighbour, upperNeighbour, lowerNeighbour]
-  adjacent_vertices  _ Nothing  = []
-  add_vertex                = undefined
-  all_nodes                 =  filter isJust . toList
+test_board::[String]
+test_board = ["XXXX"
+             ,"X__X"
+             ,"X__X"
+             ,"XXXX"
+             ]
 
 board::[String]
 board = [ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
