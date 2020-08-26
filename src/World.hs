@@ -15,3 +15,5 @@ data World  = World { _time::Float
                     , _scene::GameScene
                     }
 makeLenses ''World
+
+score world = Game.score (world^.scene)

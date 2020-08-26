@@ -55,12 +55,7 @@ playScene dt evt s = case s of
                         (ErrorState _)    -> return s
 
 updateGhosts::DeltaTime->Game->Game
---updateGhosts dt game = over ghosts (map (moveGhostRandomly dt)) game
---updateGhosts dt game = over ghosts (map (moveGhostOnRails (game^.manState.Man.object) 
---                                                          (game^.ghosts)
---                                                          (game^.path) dt)) game
 updateGhosts dt game = over ghosts (map (moveGhostOnRepaPath (game^.manState.Man.object) 
-                                                             --(game^.ghosts)
                                                              (game^.path) dt)) game
 
 playScenePlaying::(Monad m)=>DeltaTime->GameEvent->Game->m GameScene
@@ -86,13 +81,13 @@ playScenePlaying dt (GameEventNoOp _) game =
                           g
                           (\yp -> case g^.manState.action of
                                     ManActionGo dir      -> g&pills %~ (delete yp)
-                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.Man.score+~ (pillScore yp)
                                                              &manState.action .~ ManActionEat yp dir 0.1
                                     ManActionEat _ dir _ -> g&pills %~ (delete yp)
-                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.Man.score+~ (pillScore yp)
                                                              &manState.action .~ ManActionEat yp dir 0.1
                                     ManActionStop  dir   -> g&pills %~ (delete yp)
-                                                             &manState.score+~ (pillScore yp)
+                                                             &manState.Man.score+~ (pillScore yp)
                                                              &manState.action .~ ManActionEat yp dir 0.1
                                     otherwise            -> (trace $ show (g^.manState)) $ undefined -- TODO
                           )
@@ -101,7 +96,11 @@ playScenePlaying dt (GameEventNoOp _) game =
            -- adjust man running against wall
            . over manState (handleWallsCollision game)
            -- adjust man running throu holes
-           . over (manState.Man.object) id -- TODO
+           . over (manState.Man.object) -- TODO: Refator the constants
+                  (\(x,y,r) -> let x' = if x < 0 then 36 - x else if x > 36.5 then 36.5 - x else x
+                                   y' = if y < 0 then 21 - y else if y > 21.5 then 21.5 - y else y
+                                in (x',y',r)
+                  )
            -- preliminary move man
            . over manState (\s-> case s^.action of
                                   ManActionGo dir -> handlePreliminaryManMove dt dir s
@@ -129,7 +128,7 @@ playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ 
 
 
 playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
-playSceneStartGame dt (GameEventStartGame t) = return $ Playing mkGame
+playSceneStartGame dt (GameEventStartGame t) =  return $ Playing $ (\g->(trace (show (g^.tunnels))) g) $ mkGame
   where mkGame::Game
         mkGame    = Game 0 
                          (nub $ gameField^.Board.path)
@@ -174,12 +173,22 @@ hasCollision ci@(cx,cy,r) re@(rx,ry,w,h) = let cramp v mn mx = max mn (min v mx)
                                            in  distSqrd < r*r
 handlePreliminaryManMove dt dir  s = set lastState (Just s)
                                      . set action (ManActionGo dir)
-                                     . over (Man.object) (move dt dir (s^.Man.speed)) 
+                                     . over (Man.object) ( 
+                                                          move dt dir (s^.Man.speed)
+                                                         ) 
                                      $ s
            
 handleWallsCollision game s = if any (hasCollision (s^.Man.object)) (game^.walls) 
                           then maybe undefined id (s^.lastState)
                           else s
+
+score scene = case scene of
+                        StartGame         ->undefined -- TODO
+                        (Playing game)    -> game^.manState.Man.score
+                        (LostGame game)   -> game^.manState.Man.score
+                        (WonGame game)    -> game^.manState.Man.score
+                        FinishedAllLevels -> undefined -- TODO
+                        (ErrorState _)    -> undefined -- TODO
 
 -- | check if game is won
 -- TODO 

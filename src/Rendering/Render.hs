@@ -44,8 +44,25 @@ gameAsPictureState gameConf = do  world <- get
                                   let s = world^.scene
                                   (translate (-0.5*(gameConf^.screenWidth-gameConf^.objectSize)) 
                                              (-0.5*(gameConf^.screenHeight-gameConf^.objectSize))) 
-                                    <$> case s of
-                                          StartGame -> return $ startSceneAsPicture gameConf
-                                          ErrorState desc -> return $ errorSceneAsPicture gameConf desc
-                                          Playing game -> playingSceneAsPicture gameConf game
-                                          _ -> return Blank
+                                    <$> gamePic s
+                              where hud w =  Color Graphics.Gloss.yellow
+                                          $ translate 0 560
+                                          $ uncurry scale (0.15,0.15)
+                                          $ Text $ "Score: " ++ (show (Game.score (w^.scene)))
+                                    gamePic s = case s of
+                                                StartGame -> return $ startSceneAsPicture gameConf
+                                                ErrorState desc -> return $ errorSceneAsPicture gameConf desc
+                                                Playing game -> (mapStateT overlayHud 
+                                                                $ playingSceneAsPicture gameConf game)
+                                                _ ->  return Blank
+                                    overlayHud::(IO (Picture, World) )-> (IO (Picture, World))
+                                    overlayHud picM = picM >>= (\(pic, world) -> 
+                                                                  return $ 
+                                                                       (pictures [pic, hud world],world)
+                                                               )
+
+x gameConf = uncurry scale (0.3,0.3)
+                               $ Color Graphics.Gloss.yellow
+                               $ pictures [translate 0 120 $ Text "press some key"
+                                          ,Text "to start game..."
+                                          ]
