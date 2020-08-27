@@ -3,10 +3,11 @@
 a clone of the arcade pac man written in haskell using gloss for graphics and game loop and alut for background music and sounds.
 
 ## In Work
-+ Ghost Collision and reduce score, game over on negative score
++ Ghost Collision and Game Over
 
 
 ## TODO
++ Animate Man daying
 + Refactor magic numbers is Tunnel passing in Game.hs
 + Refactor: Tidy up Ghost.hs, Board.hs, Lib.hs, Game.hs, maybe introduce global State 
 + Game Over

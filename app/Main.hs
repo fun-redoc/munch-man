@@ -96,7 +96,8 @@ handleInputIOState evt = do world <- get
                             handleInput (world^.scene) evt
   where
     handleInput::(Monad m)=> GameScene->Event->StateT World m ()
-    handleInput StartGame    (EventKey (Char 'q') Up _ _) = event .= GameEventQuit
+    --handleInput StartGame    (EventKey (Char 'q') Up _ _) = event .= GameEventQuit
+    handleInput _            (EventKey (Char 'q') Up _ _) = event .= GameEventQuit
     handleInput StartGame    (EventKey _          Up _ _) = event .= GameEventStartGame
     handleInput (Playing _)  (EventKey (Char c) Down _ _) =
       event .= case c of 'h' -> GameEventManGo DirLeft

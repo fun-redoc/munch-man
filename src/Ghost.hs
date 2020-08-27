@@ -41,10 +41,11 @@ mkGhost f path fieldGraph ghostObject@(x,y,w,h) = Ghost ghostObject dest' dir' 1
     rg = (mkStdGen (round f))
     neighbours = findNeighbours 1.01 path (x,y)
     ((x',y'), rg') = randomPick rg neighbours
-    --dest' = (x',y')
-    --dir' = (x'-x,y'-y)
     dest' = (x,y)
     dir' = (0,0)
+
+score::Ghost->Int
+score = const 3
 
 moveGhostOnRepaPath::Entity e=>e->[Vec]->DeltaTime->Ghost->Ghost
 moveGhostOnRepaPath man path dt ghost = -- (trace "Hallo") $

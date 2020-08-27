@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 513c886523422e531f2f0941f6a74f52b540d5d5429ce09cb8c5543b39cc44fb
+-- hash: 31888419db14685b70f5e38d8ba162dce0af61b9d8280ed63e97486712193abc
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -51,6 +51,7 @@ library
       Pill
       Rendering.Configuration
       Rendering.ErrorScene
+      Rendering.LostGameScene
       Rendering.PlayingScene
       Rendering.Render
       Rendering.StartScene

@@ -15,6 +15,7 @@ import Rendering.Configuration
 import Rendering.ErrorScene
 import Rendering.StartScene
 import Rendering.PlayingScene
+import Rendering.LostGameScene
 
 --import qualified Data.Vector as V
 import Data.Either
@@ -54,15 +55,10 @@ gameAsPictureState gameConf = do  world <- get
                                                 ErrorState desc -> return $ errorSceneAsPicture gameConf desc
                                                 Playing game -> (mapStateT overlayHud 
                                                                 $ playingSceneAsPicture gameConf game)
+                                                LostGame game -> mapStateT overlayHud $ return $ lostGameSceneAsPicture gameConf
                                                 _ ->  return Blank
                                     overlayHud::(IO (Picture, World) )-> (IO (Picture, World))
                                     overlayHud picM = picM >>= (\(pic, world) -> 
                                                                   return $ 
                                                                        (pictures [pic, hud world],world)
                                                                )
-
-x gameConf = uncurry scale (0.3,0.3)
-                               $ Color Graphics.Gloss.yellow
-                               $ pictures [translate 0 120 $ Text "press some key"
-                                          ,Text "to start game..."
-                                          ]

@@ -49,7 +49,7 @@ playScene::(Monad m)=>DeltaTime->GameEvent->GameScene->m GameScene
 playScene dt evt s = case s of
                         StartGame         -> playSceneStartGame dt evt
                         (Playing game)    -> playScenePlaying dt evt (updateGhosts dt game)
-                        (LostGame game)    -> undefined -- TODO
+                        (LostGame game)   -> return s -- TODO
                         (WonGame game)    -> undefined -- TODO
                         FinishedAllLevels -> undefined -- TODO
                         (ErrorState _)    -> return s
@@ -148,8 +148,14 @@ playSceneStartGame _ _  = return $ StartGame
 
 -- | checks if there was a ghost collision
 ghostCollision::Game->Either Game Game
-ghostCollision game = -- TODO there is no collision detection yet
-                      Left game -- default case, no collison
+ghostCollision game = 
+  let ghostCollisions =  game^..ghosts.folded.filtered 
+                          (\ghost-> hasCollision (game^.manState.Man.object) (ghost^.Ghost.object))
+      totalCollisionScore = sum $ map Ghost.score ghostCollisions
+      newManScore = game^.manState.Man.score - totalCollisionScore -- TODO add in case of blue pill mode
+  in (if null ghostCollisions then Left   -- man still living
+                              else Right) -- man death
+                                          (game&manState.Man.score .~ newManScore)
 
 hasPillCollision::ManState->Pill->Bool
 hasPillCollision m p = case p of
