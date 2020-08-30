@@ -49,7 +49,7 @@ playScene::(Monad m)=>DeltaTime->GameEvent->GameScene->m GameScene
 playScene dt evt s = case s of
                         StartGame         -> playSceneStartGame dt evt
                         (Playing game)    -> playScenePlaying dt evt (updateGhosts dt game)
-                        (LostGame game)   -> return s -- TODO
+                        (LostGame game)   -> playSceneLostGame dt evt game
                         (WonGame game)    -> undefined -- TODO
                         FinishedAllLevels -> undefined -- TODO
                         (ErrorState _)    -> return s
@@ -126,9 +126,12 @@ playScenePlaying dt (GameEventManStop _) game =
            $ game
 playScenePlaying _ e game = return $ ErrorState ("Unknow Event \"" ++ show e ++ "\" in Playing Scene.")
 
+playSceneLostGame::(Monad m)=>DeltaTime->GameEvent->Game->m GameScene
+playSceneLostGame dt evt@(GameEventStartGame t) _    = playSceneStartGame dt evt
+playSceneLostGame _  _                          game = return $ LostGame game
 
 playSceneStartGame::(Monad m)=>DeltaTime->GameEvent->m GameScene
-playSceneStartGame dt (GameEventStartGame t) =  return $ Playing $ (\g->(trace (show (g^.tunnels))) g) $ mkGame
+playSceneStartGame dt (GameEventStartGame t) =  return $ Playing mkGame
   where mkGame::Game
         mkGame    = Game 0 
                          (nub $ gameField^.Board.path)
