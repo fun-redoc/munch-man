@@ -43,8 +43,10 @@ dependencies:
 - strict
 - directory
 - vector
+- containers
 - lens
 - transformers
+- monad-loops
 - bmp
 - gloss
 - gloss-juicy

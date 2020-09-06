@@ -4,7 +4,7 @@ cabal-version: 2.0
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 31888419db14685b70f5e38d8ba162dce0af61b9d8280ed63e97486712193abc
+-- hash: 53544384bad269342fb460aa9e0117cbe9f4ffba13f9cc0d1791238cf0c25d25
 
 name:           munchman-gloss
 version:        0.1.0.0
@@ -42,6 +42,7 @@ source-repository head
 
 library
   exposed-modules:
+      AStar
       Board
       Event
       Game
@@ -69,6 +70,7 @@ library
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
+    , containers
     , directory
     , fgl
     , ghci-dap
@@ -78,6 +80,7 @@ library
     , haskell-dap
     , haskell-debug-adapter
     , lens
+    , monad-loops
     , random
     , repa
     , strict
@@ -101,6 +104,7 @@ executable munchman-gloss-exe
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
+    , containers
     , directory
     , fgl
     , ghci-dap
@@ -110,6 +114,7 @@ executable munchman-gloss-exe
     , haskell-dap
     , haskell-debug-adapter
     , lens
+    , monad-loops
     , munchman-gloss
     , random
     , repa
@@ -133,6 +138,7 @@ test-suite munchman-gloss-test
     , JuicyPixels
     , base >=4.7 && <5
     , bmp
+    , containers
     , directory
     , fgl
     , ghci-dap
@@ -142,6 +148,7 @@ test-suite munchman-gloss-test
     , haskell-dap
     , haskell-debug-adapter
     , lens
+    , monad-loops
     , munchman-gloss
     , random
     , repa
