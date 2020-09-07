@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ScopedTypeVariables, BangPatterns #-}
+import Debug.Trace (trace)
 import Graph
 import Lib
 import Board
@@ -46,7 +47,7 @@ instance Num n=>WGraph RG n Pos where
   get_weight (RG g) v1 v2    = 1 
   adjacent_vertices (RG g) p = adjacent_vertices_RG g p
 
-adjacent_vertices_RG g (x,y) = let [nRows, nCols] = R.listOfShape $ R.extent g
+adjacent_vertices_RG g (x,y) = let [nCols, nRows] = R.listOfShape $ R.extent g
                                    xMinus1 = x - 1
                                    xPlus1  = x + 1
                                    yMinus1  = y - 1
@@ -63,7 +64,11 @@ adjacent_vertices_RG g (x,y) = let [nRows, nCols] = R.listOfShape $ R.extent g
                                    rightNeighbour = g R.! (R.ix2 y     xRight)
                                    upperNeighbour = g R.! (R.ix2 yUp   x)
                                    lowerNeighbour = g R.! (R.ix2 yDown x)
-                                in -- (\ns -> (trace (show ns)) ns) $ 
+--                                   leftNeighbour  = g R.! (R.ix2 xLeft  y)
+--                                   rightNeighbour = g R.! (R.ix2 xRight y)
+--                                   upperNeighbour = g R.! (R.ix2 x yUp  )
+--                                   lowerNeighbour = g R.! (R.ix2 x yDown)
+                                in --(\ns -> (trace (show ns)) ns) $ 
                                   (Prelude.map fromJust . Prelude.filter isJust) $ [leftNeighbour, rightNeighbour, upperNeighbour, lowerNeighbour]
 
 toRepaDIM2_RG::[String] -> RG (Infinite Float) Pos 
@@ -106,8 +111,6 @@ main = do
     let a1::StateT (PQ [] (Infinite Float) Pos, M.Map Pos (Maybe Pos,(Infinite Float)),RG (Infinite Float) Pos) IO [Pos] 
             = astar euclidian1 (1,1) (9,3)
     print "before"
-    print $ WG.adjacent_vertices repa (1,1)
-    print "before 1"
     !astarPath <- evalStateT a1 
                              ( emptyPriorityQueue::PQ [] (Infinite Float) Pos
                              , M.empty::M.Map Pos (Maybe Pos,(Infinite Float))

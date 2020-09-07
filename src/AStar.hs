@@ -67,13 +67,18 @@ astar heuristics startVertex destVertex =
         let closed' = M.insert startVertex (Nothing, Bound 0) closed
         put (open', closed', graph)
         whileM_ (do (open,_,_) <- get
-                    let (cur,_) = pull_highest_priority_element open
-                    return $ maybe False (/=destVertex) $ fst <$> cur
+                    --let (cur,_) = pull_highest_priority_element open
+                    --return $ maybe False (/=destVertex) $ fst <$> cur
+                    return -- $ (trace (show ("while", open))) 
+                           $ not $ is_empty open
                 )
                 (do 
                     (open, closed, graph) <- get
                     let (cur, open') = pull_highest_priority_element open
                     put (open', closed, graph)
+                    if maybe False (/=destVertex) $ fst <$> cur
+                        then do (trace (show ("go on ", cur))) return ()
+                        else do (trace (show ("end", cur))) return ()
                     if isNothing cur
                         then return ()
                         else do
