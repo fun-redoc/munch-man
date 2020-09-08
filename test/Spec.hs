@@ -34,64 +34,6 @@ import qualified Data.Array.Repa.Repr.Vector as R
 import AStar
 import GHC.Base (join)
 
-data RG p a = RG {unRG::(R.Array R.V R.DIM2) (Maybe (a, p))}
-
-instance (Num n)=>Graph (RG  n) Pos where
-  emptyGraph       = undefined
-  num_vertices     = undefined
-  adjacent_vertices= undefined
-  all_nodes        = undefined
-  add_vertex       = undefined
-
-instance Num n=>WGraph RG n Pos where
-  get_weight (RG g) v1 v2    = 1 
-  adjacent_vertices (RG g) p = adjacent_vertices_RG g p
-
-adjacent_vertices_RG g (x,y) = let [nCols, nRows] = R.listOfShape $ R.extent g
-                                   xMinus1 = x - 1
-                                   xPlus1  = x + 1
-                                   yMinus1  = y - 1
-                                   yPlus1  = y + 1
-                                   xLeft   = if xMinus1 == -1 then nCols-1 -- tunnel
-                                                             else xMinus1
-                                   xRight  = if xPlus1 == nCols then 0 -- tunnel
-                                                               else xPlus1
-                                   yUp     = if yPlus1 == nRows then 0 -- tunnel
-                                                               else yPlus1
-                                   yDown   = if yMinus1 == -1 then nRows-1 -- tunnel
-                                                             else yMinus1
-                                   leftNeighbour  = g R.! (R.ix2 y     xLeft )
-                                   rightNeighbour = g R.! (R.ix2 y     xRight)
-                                   upperNeighbour = g R.! (R.ix2 yUp   x)
-                                   lowerNeighbour = g R.! (R.ix2 yDown x)
---                                   leftNeighbour  = g R.! (R.ix2 xLeft  y)
---                                   rightNeighbour = g R.! (R.ix2 xRight y)
---                                   upperNeighbour = g R.! (R.ix2 x yUp  )
---                                   lowerNeighbour = g R.! (R.ix2 x yDown)
-                                in --(\ns -> (trace (show ns)) ns) $ 
-                                  (Prelude.map fromJust . Prelude.filter isJust) $ [leftNeighbour, rightNeighbour, upperNeighbour, lowerNeighbour]
-
-toRepaDIM2_RG::[String] -> RG (Infinite Float) Pos 
-toRepaDIM2_RG xs = RG $ R.computeS $ R.traverse
-                  (R.fromListUnboxed (R.Z R.:. (rows::Int) R.:. (cols::Int)) (join $ reverse xs)) -- TODO take sizes from configuration
-                  id
-                  (\f (R.Z R.:. y R.:. x)->extract ((x,y),f (R.ix2 y x)))
-    where extract ((x,y),c) = -- (trace $ show ("Board", x,y,c)) $
-            if (c == 'O' || c == '.' || c == '_' || c == 'G' || c == '@')
-                then Just ((x,y),1)
-                else Nothing
-          rows = length xs
-          cols = if rows > 0 then (length $ xs !! 0) else 0
-
--- euclidian1::(Integral n, Num n)=>Heuristics g (n, n) (Infinite Float)
-euclidian1 g (x1,y1) (x2,y2) = sqrt' $ fromIntegral $ (dx*dx + dy*dy)
-                               where dx = x2-x1
-                                     dy = y2-y1
-                                     sqrt' (Bound x) = Bound (sqrt x)
-                                     sqrt' PositiveInfinity = PositiveInfinity
-                                     sqrt' NegativeInfinity = undefined
-
-
 test::[String]
 test = ["XXXXXXXXXXX"--4
        ,"X_________X"--3
@@ -107,16 +49,14 @@ instance Bounded (Infinite n) where
 
 main :: IO ()
 main = do
-    let !repa = toRepaDIM2_RG test
-    let a1::StateT (PQ [] (Infinite Float) Pos, M.Map Pos (Maybe Pos,(Infinite Float)),RG (Infinite Float) Pos) IO [Pos] 
-            = astar euclidian1 (1,1) (9,3)
-    print "before"
+    let !repa = toRepaDIM2 test
+    let a1::StateT (PQ [] (Infinite Float) Pos, M.Map Pos (Maybe Pos,(Infinite Float)),GG (Infinite Float) Pos) IO [Pos] 
+            = astar euclidian (1,1) (9,3)
     !astarPath <- evalStateT a1 
                              ( emptyPriorityQueue::PQ [] (Infinite Float) Pos
                              , M.empty::M.Map Pos (Maybe Pos,(Infinite Float))
                              , repa
                              )
-    print "after"
     print astarPath
     return ()
 
