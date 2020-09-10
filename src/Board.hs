@@ -34,6 +34,7 @@ import Ghost
 import GHC.Base (join)
 import Data.List (elemIndex, sort, nub)
 import Data.Graph.Inductive (Graph(mkGraph), undir)
+import PriorityQueue
 
 data GameField = GameField { _walls:: [RectEntity]
                            , _tunnels::[RectEntity]
@@ -42,7 +43,7 @@ data GameField = GameField { _walls:: [RectEntity]
                            , _ghosts::[RectEntity]
                            , _man::Maybe CircleEntity
                            , _path::[Vec]
-                           , _repaPath::GG Int Pos -- Array V DIM2 (Maybe Pos)
+                           , _repaPath::GG (Infinite Float)  Pos -- Array V DIM2 (Maybe Pos)
                            , _fieldGraph::FieldGraph
                            } 
 makeLenses ''GameField
@@ -72,10 +73,10 @@ toGameField xs = foldl (\gf (r,s) -> rowToGameField gf (rows-r) s)
                   '_' -> gf&path    <>~[(col, row)]
                   _ -> undefined
           !repa = toRepaDIM2 xs
-          ns = map snd $ map fromJust $ filter isJust (R.toList (unGG repa))
+          ns = map fst $ map fromJust $ filter isJust (R.toList (unGG repa))
           vertices = nub 
                    $ foldr 
-                       (\n vs -> let neighbours = map snd $ adjacent_vertices_GG repa n
+                       (\n vs -> let neighbours = map fst $ adjacent_vertices_GG repa n
                                      vs' = sort $ map (\p -> (n,p)) neighbours 
                                  in  vs'++vs
                        ) []
